@@ -72,44 +72,45 @@ const Registrar = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border bg-card px-12 py-6">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
+      <header className="border-b border-border bg-card px-4 sm:px-8 md:px-12 py-4 sm:py-6">
+        <div className="max-w-4xl mx-auto flex items-center justify-between gap-2">
           <Button
             variant="ghost"
-            size="lg"
+            size="default"
             onClick={() => navigate("/")}
+            className="min-h-[44px]"
           >
-            <ArrowLeft className="mr-2 h-5 w-5" />
-            Voltar
+            <ArrowLeft className="h-5 w-5 sm:mr-2" />
+            <span className="hidden sm:inline">Voltar</span>
           </Button>
-          <h1 className="text-3xl font-semibold text-foreground">
+          <h1 className="text-lg sm:text-2xl md:text-3xl font-semibold text-foreground text-center flex-1">
             Registrar Problema
           </h1>
-          <div className="w-32" /> {/* Spacer for alignment */}
+          <div className="w-[60px] sm:w-32" /> {/* Spacer for alignment */}
         </div>
       </header>
 
       {/* Form Content */}
-      <main className="px-12 py-12">
-        <form onSubmit={handleSubmit} className="max-w-3xl mx-auto space-y-10">
+      <main className="px-4 sm:px-8 md:px-12 py-6 sm:py-12">
+        <form onSubmit={handleSubmit} className="max-w-3xl mx-auto space-y-6 sm:space-y-10">
           {/* Category Selection */}
-          <div className="space-y-4">
-            <Label htmlFor="categoria" className="text-2xl font-medium text-foreground">
+          <div className="space-y-3 sm:space-y-4">
+            <Label htmlFor="categoria" className="text-lg sm:text-xl md:text-2xl font-medium text-foreground">
               Qual é o tipo de problema?
             </Label>
             <Select value={categoria} onValueChange={setCategoria}>
               <SelectTrigger 
                 id="categoria" 
-                className="h-16 text-xl bg-card border-2"
+                className="h-14 sm:h-16 text-base sm:text-lg md:text-xl bg-card border-2 min-h-[56px]"
               >
                 <SelectValue placeholder="Selecione uma categoria..." />
               </SelectTrigger>
-              <SelectContent className="bg-card border-2">
+              <SelectContent className="bg-card border-2 z-50">
                 {categorias.map((cat) => (
                   <SelectItem 
                     key={cat} 
                     value={cat}
-                    className="text-xl py-4 cursor-pointer hover:bg-accent"
+                    className="text-base sm:text-lg md:text-xl py-3 sm:py-4 cursor-pointer hover:bg-accent min-h-[44px]"
                   >
                     {cat}
                   </SelectItem>
@@ -119,8 +120,8 @@ const Registrar = () => {
           </div>
 
           {/* Description */}
-          <div className="space-y-4">
-            <Label htmlFor="descricao" className="text-2xl font-medium text-foreground">
+          <div className="space-y-3 sm:space-y-4">
+            <Label htmlFor="descricao" className="text-lg sm:text-xl md:text-2xl font-medium text-foreground">
               Descreva o problema
             </Label>
             <Textarea
@@ -128,13 +129,13 @@ const Registrar = () => {
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
               placeholder="Ex: Poste apagado perto da quadra..."
-              className="min-h-[200px] text-xl p-6 bg-card border-2 resize-none"
+              className="min-h-[150px] sm:min-h-[200px] text-base sm:text-lg md:text-xl p-4 sm:p-6 bg-card border-2 resize-none"
             />
           </div>
 
           {/* Photo Upload */}
-          <div className="space-y-4">
-            <Label className="text-2xl font-medium text-foreground">
+          <div className="space-y-3 sm:space-y-4">
+            <Label className="text-lg sm:text-xl md:text-2xl font-medium text-foreground">
               Adicionar Foto (opcional)
             </Label>
             <Button
@@ -142,16 +143,18 @@ const Registrar = () => {
               variant="outline"
               size="xl"
               onClick={handleFotoCapture}
-              className="w-full border-2"
+              className="w-full border-2 min-h-[56px]"
             >
-              <Camera className="mr-3 h-6 w-6" />
-              {foto ? `Foto: ${foto.name}` : "Tirar foto agora"}
+              <Camera className="mr-2 sm:mr-3 h-5 w-5 sm:h-6 sm:w-6" />
+              <span className="text-sm sm:text-base md:text-lg truncate">
+                {foto ? `Foto: ${foto.name}` : "Tirar foto agora"}
+              </span>
             </Button>
           </div>
 
           {/* Location Selection */}
-          <div className="space-y-4">
-            <Label className="text-2xl font-medium text-foreground">
+          <div className="space-y-3 sm:space-y-4">
+            <Label className="text-lg sm:text-xl md:text-2xl font-medium text-foreground">
               Onde fica o problema?
             </Label>
             <Button
@@ -159,10 +162,10 @@ const Registrar = () => {
               variant="outline"
               size="xl"
               onClick={() => navigate("/mapa")}
-              className="w-full border-2"
+              className="w-full border-2 min-h-[56px]"
             >
-              <MapPin className="mr-3 h-6 w-6" />
-              Marcar no mapa
+              <MapPin className="mr-2 sm:mr-3 h-5 w-5 sm:h-6 sm:w-6" />
+              <span className="text-sm sm:text-base md:text-lg">Marcar no mapa</span>
             </Button>
           </div>
 
@@ -170,7 +173,7 @@ const Registrar = () => {
           <Button
             type="submit"
             size="xl"
-            className="w-full mt-12 bg-green-600 hover:bg-green-700 text-white"
+            className="w-full mt-8 sm:mt-12 bg-green-600 hover:bg-green-700 text-white min-h-[56px] text-base sm:text-lg"
           >
             Enviar Solicitação
           </Button>
