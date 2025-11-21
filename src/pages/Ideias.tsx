@@ -215,7 +215,7 @@ const Ideias = () => {
       </div>
 
       {/* Problems List */}
-      <main className="px-4 sm:px-8 md:px-12 py-6 sm:py-8 md:py-10 pb-24 sm:pb-28">
+      <main className="px-4 sm:px-8 md:px-12 py-6 sm:py-8 md:py-10 pb-32">
         <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">
           {problemasFiltrados.length === 0 ? (
             <Card className="p-6 sm:p-8 md:p-12 text-center">

@@ -70,7 +70,7 @@ const Registrar = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen overflow-hidden bg-background flex flex-col">
       {/* Header */}
       <header className="border-b border-border bg-card px-4 sm:px-8 md:px-12 py-4 sm:py-6">
         <div className="max-w-4xl mx-auto flex items-center justify-between gap-2">
@@ -91,7 +91,7 @@ const Registrar = () => {
       </header>
 
       {/* Form Content */}
-      <main className="px-4 sm:px-8 md:px-12 py-6 sm:py-12">
+      <main className="flex-1 overflow-y-auto px-4 sm:px-8 md:px-12 py-6 sm:py-12">
         <form onSubmit={handleSubmit} className="max-w-3xl mx-auto space-y-6 sm:space-y-10">
           {/* Category Selection */}
           <div className="space-y-3 sm:space-y-4">

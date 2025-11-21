@@ -9,7 +9,7 @@ const Index = () => {
   return (
     <div className="h-screen bg-background flex flex-col overflow-hidden">
       {/* Main Content */}
-      <main className="flex-1 flex flex-col items-center justify-center px-4 py-4">
+      <main className="flex-1 flex flex-col items-center justify-start pt-8 px-4 pb-4">
         <div className="w-full max-w-2xl flex flex-col items-center space-y-3">
           {/* Community Illustration */}
           <div className="w-full flex justify-center">

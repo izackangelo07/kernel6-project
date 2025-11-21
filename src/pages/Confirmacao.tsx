@@ -15,7 +15,7 @@ const Confirmacao = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 sm:px-8 md:px-12 py-8 sm:py-16">
+    <div className="h-screen overflow-hidden bg-background flex flex-col items-center justify-center px-4 sm:px-8 md:px-12 py-8 sm:py-16">
       <div className="max-w-2xl w-full text-center space-y-6 sm:space-y-10">
         {/* Success Icon */}
         <div className="flex justify-center">
@@ -25,7 +25,7 @@ const Confirmacao = () => {
         {/* Success Message */}
         <div className="space-y-3 sm:space-y-4">
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground px-4">
-            Solicitação Enviada!
+            Registro Enviado!
           </h1>
           <p className="text-base sm:text-xl md:text-2xl text-muted-foreground px-4">
             Obrigado por contribuir para melhorar nossa comunidade.
@@ -81,8 +81,7 @@ const Confirmacao = () => {
 
         {/* Info Text */}
         <p className="text-sm sm:text-base md:text-lg text-muted-foreground pt-6 sm:pt-8 px-4">
-          Seu registro foi enviado para a equipe responsável. 
-          Acompanhe o progresso através do QR Code na tela inicial.
+          Sua registro foi enviado.
         </p>
       </div>
     </div>
