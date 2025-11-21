@@ -49,6 +49,16 @@ const Index = () => {
             >
               Ver Ideias da Comunidade
             </Button>
+
+            <Button 
+              variant="outline" 
+              size="xl" 
+              className="w-full min-h-[56px] bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 border-2 border-purple-200"
+              onClick={() => navigate("/painel-sonhos")}
+            >
+              <span className="mr-2">🌟</span>
+              Painel dos Sonhos do Bairro
+            </Button>
           </div>
 
           {/* Help Link */}
