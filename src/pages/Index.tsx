@@ -9,29 +9,29 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Main Content */}
-      <main className="flex-1 flex flex-col items-center justify-center px-4 py-8 sm:py-12 md:py-16">
-        <div className="w-full max-w-2xl flex flex-col items-center space-y-3">
+      <main className="flex-1 container mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8 md:py-12 flex flex-col items-center justify-center">
+        <div className="w-full max-w-3xl flex flex-col items-center space-y-4 sm:space-y-5 md:space-y-6">
           {/* Community Illustration */}
-          <div className="w-full flex justify-center">
+          <div className="w-full flex justify-center mb-2 sm:mb-4">
             <img 
               src={communityIllustration} 
               alt="Ilustração da comunidade" 
-              className="w-full max-w-md h-auto object-contain"
+              className="w-full max-w-lg h-auto object-contain"
             />
           </div>
 
           {/* Title */}
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold text-center text-foreground leading-tight px-2">
+          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-semibold text-center text-foreground leading-tight">
             Conte sua ideia ou problema do bairro
           </h1>
 
           {/* Subtitle */}
-          <p className="text-sm sm:text-base md:text-lg text-muted-foreground text-center px-2">
+          <p className="text-sm sm:text-base md:text-lg text-muted-foreground text-center max-w-2xl">
             Participe e ajude a melhorar nossa comunidade.
           </p>
 
           {/* Buttons */}
-          <div className="w-full max-w-md space-y-3 sm:space-y-4 pt-2 px-2">
+          <div className="w-full max-w-lg space-y-3 sm:space-y-4 pt-2 sm:pt-4">
             <Button 
               size="lg" 
               className="w-full min-h-[48px] sm:min-h-[56px] text-sm sm:text-base"
