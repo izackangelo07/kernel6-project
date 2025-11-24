@@ -15,7 +15,7 @@ const Confirmacao = () => {
   }, []);
 
   return (
-    <div className="h-screen overflow-hidden bg-background flex flex-col items-center justify-center px-4 sm:px-8 md:px-12 py-8 sm:py-16">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 sm:px-6 md:px-8 py-8 sm:py-12 md:py-16">
       <div className="max-w-2xl w-full text-center space-y-6 sm:space-y-10">
         {/* Success Icon */}
         <div className="flex justify-center">
@@ -58,11 +58,11 @@ const Confirmacao = () => {
         )}
 
         {/* Action Buttons */}
-        <div className="space-y-4 sm:space-y-6 pt-6 sm:pt-8">
+        <div className="space-y-3 sm:space-y-4 pt-6 sm:pt-8">
           <Button
-            size="xl"
+            size="lg"
             onClick={() => navigate("/")}
-            className="w-full min-h-[56px]"
+            className="w-full min-h-[48px] sm:min-h-[56px]"
           >
             <Home className="mr-2 sm:mr-3 h-5 w-5 sm:h-6 sm:w-6" />
             <span className="text-sm sm:text-base md:text-lg">Voltar ao Início</span>
@@ -70,9 +70,9 @@ const Confirmacao = () => {
 
           <Button
             variant="secondary"
-            size="xl"
+            size="lg"
             onClick={() => navigate("/ideias")}
-            className="w-full min-h-[56px]"
+            className="w-full min-h-[48px] sm:min-h-[56px]"
           >
             <Eye className="mr-2 sm:mr-3 h-5 w-5 sm:h-6 sm:w-6" />
             <span className="text-sm sm:text-base md:text-lg">Ver Todas as Solicitações</span>

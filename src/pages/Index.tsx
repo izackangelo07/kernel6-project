@@ -7,9 +7,9 @@ const Index = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="h-screen bg-background flex flex-col overflow-hidden">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Main Content */}
-      <main className="flex-1 flex flex-col items-center justify-start pt-8 px-4 pb-4">
+      <main className="flex-1 flex flex-col items-center justify-center px-4 py-8 sm:py-12 md:py-16">
         <div className="w-full max-w-2xl flex flex-col items-center space-y-3">
           {/* Community Illustration */}
           <div className="w-full flex justify-center">
@@ -31,10 +31,10 @@ const Index = () => {
           </p>
 
           {/* Buttons */}
-          <div className="w-full max-w-md space-y-3 pt-2 px-2">
+          <div className="w-full max-w-md space-y-3 sm:space-y-4 pt-2 px-2">
             <Button 
               size="lg" 
-              className="w-full h-12 sm:h-14"
+              className="w-full min-h-[48px] sm:min-h-[56px] text-sm sm:text-base"
               onClick={() => navigate("/registrar")}
             >
               Registrar Problema ou Ideia
@@ -43,7 +43,7 @@ const Index = () => {
             <Button 
               variant="secondary" 
               size="lg" 
-              className="w-full h-12 sm:h-14"
+              className="w-full min-h-[48px] sm:min-h-[56px] text-sm sm:text-base"
               onClick={() => navigate("/ideias")}
             >
               Ver Ideias da Comunidade
@@ -52,7 +52,7 @@ const Index = () => {
             <Button 
               variant="outline" 
               size="lg" 
-              className="w-full h-12 sm:h-14 bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 border-2 border-purple-200"
+              className="w-full min-h-[48px] sm:min-h-[56px] text-sm sm:text-base bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 border-2 border-purple-200"
               onClick={() => navigate("/painel-sonhos")}
             >
               <span className="mr-2">🌟</span>
@@ -65,7 +65,7 @@ const Index = () => {
       {/* Floating Help Button */}
       <button
         onClick={() => navigate("/como-funciona")}
-        className="fixed bottom-6 right-6 w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all hover:scale-110 flex items-center justify-center z-50"
+        className="fixed bottom-6 right-6 w-14 h-14 sm:w-16 sm:h-16 md:w-[60px] md:h-[60px] rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all hover:scale-110 flex items-center justify-center z-50"
         aria-label="Como funciona?"
       >
         <HelpCircle className="w-6 h-6 sm:w-7 sm:h-7" />

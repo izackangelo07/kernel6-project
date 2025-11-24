@@ -38,9 +38,9 @@ const ComoFunciona = () => {
   ];
 
   return (
-    <div className="h-screen overflow-hidden bg-background flex flex-col">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border bg-card px-4 sm:px-8 md:px-12 py-4 sm:py-6">
+      <header className="border-b border-border bg-card px-4 sm:px-6 md:px-8 py-4 sm:py-6">
         <div className="max-w-5xl mx-auto flex items-center justify-between gap-2">
           <Button
             variant="ghost"
@@ -59,7 +59,7 @@ const ComoFunciona = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto px-4 sm:px-8 md:px-12 py-6 sm:py-12">
+      <main className="px-4 sm:px-6 md:px-8 py-6 sm:py-8 md:py-12 pb-8 sm:pb-12">
         <div className="max-w-5xl mx-auto space-y-8 sm:space-y-12">
           {/* Introduction */}
           <Card className="p-6 sm:p-8 md:p-10 bg-primary/5 border-2 border-primary/20">
@@ -122,11 +122,11 @@ const ComoFunciona = () => {
           </Card>
 
           {/* Call to Action */}
-          <div className="pt-6 sm:pt-8">
+          <div className="pt-6 sm:pt-8 pb-6 sm:pb-8">
             <Button
-              size="xl"
+              size="lg"
               onClick={() => navigate("/")}
-              className="w-full min-h-[56px]"
+              className="w-full min-h-[48px] sm:min-h-[56px]"
             >
               <Home className="mr-2 sm:mr-3 h-5 w-5 sm:h-6 sm:w-6" />
               <span className="text-sm sm:text-base md:text-lg">Voltar ao Início</span>
