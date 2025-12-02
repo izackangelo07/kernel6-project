@@ -1,21 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, MapPin, Check, X, Lightbulb, Trash2, Construction, Trees, School, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-
-// Fix for default marker icons in React Leaflet
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 // Coordenadas base do bairro (centro aproximado)
 const CENTER_LAT = -23.5505;
@@ -23,11 +14,11 @@ const CENTER_LNG = -46.6333;
 
 // Problemas mockados com coordenadas reais (lat, lng)
 const problemasMapa = [
-  { id: 1, titulo: "Poste apagado", categoria: "Iluminação pública", lat: -23.5485, lng: -46.6310, icon: Lightbulb },
-  { id: 2, titulo: "Lixo acumulado", categoria: "Limpeza urbana", lat: -23.5520, lng: -46.6350, icon: Trash2 },
-  { id: 3, titulo: "Buraco grande", categoria: "Buraco na rua", lat: -23.5510, lng: -46.6330, icon: Construction },
+  { id: 1, titulo: "Poste apagado", categoria: "Iluminação pública", lat: -23.5485, lng: -46.631, icon: Lightbulb },
+  { id: 2, titulo: "Lixo acumulado", categoria: "Limpeza urbana", lat: -23.552, lng: -46.635, icon: Trash2 },
+  { id: 3, titulo: "Buraco grande", categoria: "Buraco na rua", lat: -23.551, lng: -46.633, icon: Construction },
   { id: 4, titulo: "Mato alto", categoria: "Áreas verdes / praças", lat: -23.5495, lng: -46.6365, icon: Trees },
-  { id: 5, titulo: "Portão quebrado", categoria: "Escola / creche", lat: -23.5530, lng: -46.6320, icon: School },
+  { id: 5, titulo: "Portão quebrado", categoria: "Escola / creche", lat: -23.553, lng: -46.632, icon: School },
   { id: 6, titulo: "Falta iluminação", categoria: "Segurança", lat: -23.5515, lng: -46.6355, icon: Shield },
 ];
 
@@ -43,7 +34,7 @@ const getCategoriaColor = (categoria: string) => {
   return colorMap[categoria] || "bg-gray-500";
 };
 
-// Criar ícones customizados para cada categoria
+// Ícone customizado para cada categoria
 const createCustomIcon = (categoria: string) => {
   const colorMap: Record<string, string> = {
     "Iluminação pública": "#eab308",
@@ -53,11 +44,11 @@ const createCustomIcon = (categoria: string) => {
     "Escola / creche": "#3b82f6",
     "Segurança": "#ef4444",
   };
-  
+
   const color = colorMap[categoria] || "#6b7280";
-  
+
   return L.divIcon({
-    className: 'custom-marker',
+    className: "custom-marker",
     html: `<div style="background-color: ${color}; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
       <div style="width: 12px; height: 12px; background: white; border-radius: 50%;"></div>
     </div>`,
@@ -69,7 +60,7 @@ const createCustomIcon = (categoria: string) => {
 
 // Ícone para nova localização
 const newLocationIcon = L.divIcon({
-  className: 'new-location-marker',
+  className: "new-location-marker",
   html: `<div style="color: hsl(var(--primary)); filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));">
     <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
@@ -81,25 +72,89 @@ const newLocationIcon = L.divIcon({
   popupAnchor: [0, -40],
 });
 
-// Componente para capturar cliques no mapa
-function LocationMarker({ onLocationSelect }: { onLocationSelect: (lat: number, lng: number) => void }) {
-  useMapEvents({
-    click(e) {
-      onLocationSelect(e.latlng.lat, e.latlng.lng);
-    },
-  });
-  return null;
-}
-
 const Mapa = () => {
   const navigate = useNavigate();
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [hoveredProblema, setHoveredProblema] = useState<number | null>(null);
 
-  const handleLocationSelect = (lat: number, lng: number) => {
-    setSelectedLocation({ lat, lng });
-    toast.success("Localização marcada no mapa!");
-  };
+  const mapRef = useRef<L.Map | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const newLocationMarkerRef = useRef<L.Marker | null>(null);
+
+  useEffect(() => {
+    if (mapRef.current || !mapContainerRef.current) return;
+
+    // Inicializa o mapa Leaflet
+    const map = L.map(mapContainerRef.current, {
+      center: [CENTER_LAT, CENTER_LNG],
+      zoom: 16,
+      zoomControl: true,
+    });
+
+    mapRef.current = map;
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(map);
+
+    // Adiciona marcadores dos problemas existentes
+    problemasMapa.forEach((problema) => {
+      const Icon = problema.icon;
+
+      const marker = L.marker([problema.lat, problema.lng], {
+        icon: createCustomIcon(problema.categoria),
+      }).addTo(map);
+
+      const popupContent = `
+        <div style="padding: 4px 2px; max-width: 220px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <div style="background: #00000022; border-radius: 999px; padding: 4px; display: flex; align-items: center; justify-content: center;">
+              <span style="font-size: 12px;">•</span>
+            </div>
+            <span style="font-weight: 600; font-size: 13px;">${problema.titulo}</span>
+          </div>
+          <span style="font-size: 11px; color: #4b5563;">${problema.categoria}</span>
+        </div>
+      `;
+
+      marker.bindPopup(popupContent);
+
+      marker.on("mouseover", function () {
+        this.openPopup();
+      });
+      marker.on("mouseout", function () {
+        this.closePopup();
+      });
+    });
+
+    // Clique no mapa para selecionar nova localização
+    map.on("click", (e: L.LeafletMouseEvent) => {
+      const { lat, lng } = e.latlng;
+      setSelectedLocation({ lat, lng });
+
+      if (newLocationMarkerRef.current) {
+        map.removeLayer(newLocationMarkerRef.current);
+      }
+
+      const marker = L.marker([lat, lng], { icon: newLocationIcon }).addTo(map);
+      newLocationMarkerRef.current = marker;
+
+      marker.bindPopup(
+        `<div style="padding: 4px 2px; text-align: center; max-width: 220px;">
+          <p style="font-weight: 600; font-size: 13px; margin-bottom: 2px;">Nova Localização</p>
+          <p style="font-size: 11px; color: #4b5563;">Clique em \"Confirmar\" para continuar</p>
+        </div>`
+      );
+      marker.openPopup();
+
+      toast.success("Localização marcada no mapa!");
+    });
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
+  }, []);
 
   const handleConfirm = () => {
     if (selectedLocation) {
@@ -134,73 +189,15 @@ const Mapa = () => {
       {/* Main Content */}
       <main className="flex-1 px-4 sm:px-8 md:px-12 py-4 sm:py-6 md:py-8">
         <div className="max-w-7xl mx-auto h-full flex flex-col lg:flex-row gap-4 sm:gap-6 md:gap-8">
-          
           {/* Map Area - Left Side */}
           <div className="flex-1 flex flex-col gap-4">
             <p className="text-sm sm:text-base md:text-lg text-center text-muted-foreground">
               Clique no mapa para marcar onde está o problema
             </p>
 
-            {/* React Leaflet Map */}
+            {/* Leaflet Map */}
             <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] rounded-xl overflow-hidden shadow-lg border-2 border-border">
-              <MapContainer
-                center={[CENTER_LAT, CENTER_LNG]}
-                zoom={16}
-                scrollWheelZoom={true}
-                className="h-full w-full"
-                zoomControl={true}
-              >
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-                
-                {/* Marcadores dos problemas existentes */}
-                {problemasMapa.map((problema) => {
-                  const Icon = problema.icon;
-                  return (
-                    <Marker
-                      key={problema.id}
-                      position={[problema.lat, problema.lng]}
-                      icon={createCustomIcon(problema.categoria)}
-                      eventHandlers={{
-                        mouseover: () => setHoveredProblema(problema.id),
-                        mouseout: () => setHoveredProblema(null),
-                      }}
-                    >
-                      <Popup>
-                        <div className="p-2">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className={`${getCategoriaColor(problema.categoria)} rounded-full p-1.5`}>
-                              <Icon className="h-4 w-4 text-white" />
-                            </div>
-                            <p className="font-semibold text-sm">{problema.titulo}</p>
-                          </div>
-                          <p className="text-xs text-muted-foreground">{problema.categoria}</p>
-                        </div>
-                      </Popup>
-                    </Marker>
-                  );
-                })}
-
-                {/* Marcador da nova localização */}
-                {selectedLocation && (
-                  <Marker
-                    position={[selectedLocation.lat, selectedLocation.lng]}
-                    icon={newLocationIcon}
-                  >
-                    <Popup>
-                      <div className="p-2 text-center">
-                        <p className="font-semibold text-sm">Nova Localização</p>
-                        <p className="text-xs text-muted-foreground">Clique em "Confirmar" para continuar</p>
-                      </div>
-                    </Popup>
-                  </Marker>
-                )}
-
-                {/* Componente para capturar cliques */}
-                <LocationMarker onLocationSelect={handleLocationSelect} />
-              </MapContainer>
+              <div ref={mapContainerRef} className="w-full h-full" />
             </div>
 
             {/* Action Buttons */}
@@ -267,7 +264,7 @@ const Mapa = () => {
                   {problemasMapa.length}
                 </Badge>
               </div>
-              
+
               <div className="space-y-3 max-h-[300px] sm:max-h-[400px] overflow-y-auto">
                 {problemasMapa.map((problema) => {
                   const Icon = problema.icon;
@@ -275,8 +272,6 @@ const Mapa = () => {
                     <div
                       key={problema.id}
                       className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors cursor-pointer"
-                      onMouseEnter={() => setHoveredProblema(problema.id)}
-                      onMouseLeave={() => setHoveredProblema(null)}
                     >
                       <div className={`${getCategoriaColor(problema.categoria)} rounded-full p-2 flex-shrink-0`}>
                         <Icon className="h-4 w-4 text-white" />
