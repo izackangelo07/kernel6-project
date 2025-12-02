@@ -14,7 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      problemas: {
+        Row: {
+          categoria: string
+          created_at: string
+          descricao: string
+          id: string
+          latitude: number
+          longitude: number
+          status: string
+          titulo: string
+          updated_at: string
+          votos: number
+        }
+        Insert: {
+          categoria: string
+          created_at?: string
+          descricao: string
+          id?: string
+          latitude: number
+          longitude: number
+          status?: string
+          titulo: string
+          updated_at?: string
+          votos?: number
+        }
+        Update: {
+          categoria?: string
+          created_at?: string
+          descricao?: string
+          id?: string
+          latitude?: number
+          longitude?: number
+          status?: string
+          titulo?: string
+          updated_at?: string
+          votos?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
