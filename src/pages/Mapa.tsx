@@ -7,20 +7,11 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { useProblemas } from "@/hooks/useProblemas";
 
 // Coordenadas base do bairro (centro aproximado)
 const CENTER_LAT = -23.5505;
 const CENTER_LNG = -46.6333;
-
-// Problemas mockados com coordenadas reais (lat, lng)
-const problemasMapa = [
-  { id: 1, titulo: "Poste apagado", categoria: "Iluminação pública", lat: -23.5485, lng: -46.631, icon: Lightbulb },
-  { id: 2, titulo: "Lixo acumulado", categoria: "Limpeza urbana", lat: -23.552, lng: -46.635, icon: Trash2 },
-  { id: 3, titulo: "Buraco grande", categoria: "Buraco na rua", lat: -23.551, lng: -46.633, icon: Construction },
-  { id: 4, titulo: "Mato alto", categoria: "Áreas verdes / praças", lat: -23.5495, lng: -46.6365, icon: Trees },
-  { id: 5, titulo: "Portão quebrado", categoria: "Escola / creche", lat: -23.553, lng: -46.632, icon: School },
-  { id: 6, titulo: "Falta iluminação", categoria: "Segurança", lat: -23.5515, lng: -46.6355, icon: Shield },
-];
 
 const getCategoriaColor = (categoria: string) => {
   const colorMap: Record<string, string> = {
@@ -72,13 +63,27 @@ const newLocationIcon = L.divIcon({
   popupAnchor: [0, -40],
 });
 
+const getCategoriaIcon = (categoria: string) => {
+  const iconMap: Record<string, any> = {
+    "Iluminação pública": Lightbulb,
+    "Limpeza urbana": Trash2,
+    "Buraco na rua": Construction,
+    "Áreas verdes / praças": Trees,
+    "Escola / creche": School,
+    "Segurança": Shield,
+  };
+  return iconMap[categoria] || MapPin;
+};
+
 const Mapa = () => {
   const navigate = useNavigate();
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const { data: problemas = [], isLoading } = useProblemas();
 
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const newLocationMarkerRef = useRef<L.Marker | null>(null);
+  const problemMarkersRef = useRef<L.Marker[]>([]);
 
   useEffect(() => {
     if (mapRef.current || !mapContainerRef.current) return;
@@ -97,35 +102,6 @@ const Mapa = () => {
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(map);
 
-    // Adiciona marcadores dos problemas existentes
-    problemasMapa.forEach((problema) => {
-      const Icon = problema.icon;
-
-      const marker = L.marker([problema.lat, problema.lng], {
-        icon: createCustomIcon(problema.categoria),
-      }).addTo(map);
-
-      const popupContent = `
-        <div style="padding: 4px 2px; max-width: 220px;">
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-            <div style="background: #00000022; border-radius: 999px; padding: 4px; display: flex; align-items: center; justify-content: center;">
-              <span style="font-size: 12px;">•</span>
-            </div>
-            <span style="font-weight: 600; font-size: 13px;">${problema.titulo}</span>
-          </div>
-          <span style="font-size: 11px; color: #4b5563;">${problema.categoria}</span>
-        </div>
-      `;
-
-      marker.bindPopup(popupContent);
-
-      marker.on("mouseover", function () {
-        this.openPopup();
-      });
-      marker.on("mouseout", function () {
-        this.closePopup();
-      });
-    });
 
     // Clique no mapa para selecionar nova localização
     map.on("click", (e: L.LeafletMouseEvent) => {
@@ -155,6 +131,50 @@ const Mapa = () => {
       mapRef.current = null;
     };
   }, []);
+
+  // Adicionar marcadores dos problemas quando os dados forem carregados
+  useEffect(() => {
+    if (!mapRef.current || isLoading || problemas.length === 0) return;
+
+    const map = mapRef.current;
+
+    // Limpar marcadores anteriores
+    problemMarkersRef.current.forEach((marker) => map.removeLayer(marker));
+    problemMarkersRef.current = [];
+
+    // Adicionar novos marcadores
+    problemas.forEach((problema) => {
+      const marker = L.marker([problema.latitude, problema.longitude], {
+        icon: createCustomIcon(problema.categoria),
+      }).addTo(map);
+
+      const popupContent = `
+        <div style="padding: 4px 2px; max-width: 220px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <div style="background: #00000022; border-radius: 999px; padding: 4px; display: flex; align-items: center; justify-content: center;">
+              <span style="font-size: 12px;">•</span>
+            </div>
+            <span style="font-weight: 600; font-size: 13px;">${problema.titulo}</span>
+          </div>
+          <span style="font-size: 11px; color: #4b5563;">${problema.categoria}</span>
+          <div style="margin-top: 4px; font-size: 11px; color: #6b7280;">
+            <span>Status: ${problema.status}</span>
+          </div>
+        </div>
+      `;
+
+      marker.bindPopup(popupContent);
+
+      marker.on("mouseover", function () {
+        this.openPopup();
+      });
+      marker.on("mouseout", function () {
+        this.closePopup();
+      });
+
+      problemMarkersRef.current.push(marker);
+    });
+  }, [problemas, isLoading]);
 
   const handleConfirm = () => {
     if (selectedLocation) {
@@ -261,32 +281,38 @@ const Mapa = () => {
                   Problemas no Mapa
                 </h2>
                 <Badge className="bg-primary/10 text-primary border-primary/20">
-                  {problemasMapa.length}
+                  {problemas.length}
                 </Badge>
               </div>
 
               <div className="space-y-3 max-h-[300px] sm:max-h-[400px] overflow-y-auto">
-                {problemasMapa.map((problema) => {
-                  const Icon = problema.icon;
-                  return (
-                    <div
-                      key={problema.id}
-                      className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors cursor-pointer"
-                    >
-                      <div className={`${getCategoriaColor(problema.categoria)} rounded-full p-2 flex-shrink-0`}>
-                        <Icon className="h-4 w-4 text-white" />
+                {isLoading ? (
+                  <p className="text-center text-sm text-muted-foreground py-4">Carregando problemas...</p>
+                ) : problemas.length === 0 ? (
+                  <p className="text-center text-sm text-muted-foreground py-4">Nenhum problema registrado</p>
+                ) : (
+                  problemas.map((problema) => {
+                    const Icon = getCategoriaIcon(problema.categoria);
+                    return (
+                      <div
+                        key={problema.id}
+                        className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors cursor-pointer"
+                      >
+                        <div className={`${getCategoriaColor(problema.categoria)} rounded-full p-2 flex-shrink-0`}>
+                          <Icon className="h-4 w-4 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs sm:text-sm font-medium text-foreground truncate">
+                            {problema.titulo}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {problema.categoria}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs sm:text-sm font-medium text-foreground truncate">
-                          {problema.titulo}
-                        </p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {problema.categoria}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
 
               <Button

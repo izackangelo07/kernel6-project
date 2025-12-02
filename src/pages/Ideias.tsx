@@ -12,64 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-
-// Dados mockados
-const problemasMock = [
-  {
-    id: 1,
-    titulo: "Poste apagado na Rua das Flores",
-    categoria: "Iluminação pública",
-    status: "Em análise",
-    localizacao: "Rua das Flores, próximo à quadra",
-    descricao: "Poste sem luz há 3 dias",
-    data: "2025-11-15",
-  },
-  {
-    id: 2,
-    titulo: "Lixo acumulado na praça central",
-    categoria: "Limpeza urbana",
-    status: "Pendente",
-    localizacao: "Praça Central, próximo ao parquinho",
-    descricao: "Muito lixo acumulado nos últimos dias",
-    data: "2025-11-16",
-  },
-  {
-    id: 3,
-    titulo: "Buraco grande na Rua 12",
-    categoria: "Buraco na rua",
-    status: "Resolvido",
-    localizacao: "Rua 12, em frente ao mercado",
-    descricao: "Buraco perigoso para carros e pedestres",
-    data: "2025-11-10",
-  },
-  {
-    id: 4,
-    titulo: "Mato alto na área verde",
-    categoria: "Áreas verdes / praças",
-    status: "Em análise",
-    localizacao: "Área verde do bairro São José",
-    descricao: "Vegetação precisando de poda",
-    data: "2025-11-14",
-  },
-  {
-    id: 5,
-    titulo: "Portão da escola quebrado",
-    categoria: "Escola / creche",
-    status: "Pendente",
-    localizacao: "EMEF João Silva",
-    descricao: "Portão de entrada não fecha direito",
-    data: "2025-11-17",
-  },
-  {
-    id: 6,
-    titulo: "Falta de iluminação na viela",
-    categoria: "Segurança",
-    status: "Em análise",
-    localizacao: "Viela entre Rua 8 e Rua 9",
-    descricao: "Local escuro e inseguro à noite",
-    data: "2025-11-13",
-  },
-];
+import { useProblemas } from "@/hooks/useProblemas";
 
 const getCategoriaIcon = (categoria: string) => {
   const iconMap: Record<string, any> = {
@@ -86,11 +29,22 @@ const getCategoriaIcon = (categoria: string) => {
 
 const getStatusColor = (status: string) => {
   const colorMap: Record<string, string> = {
-    "Pendente": "bg-yellow-100 text-yellow-800 border-yellow-300",
-    "Em análise": "bg-blue-100 text-blue-800 border-blue-300",
-    "Resolvido": "bg-green-100 text-green-800 border-green-300",
+    "pendente": "bg-yellow-100 text-yellow-800 border-yellow-300",
+    "em_analise": "bg-blue-100 text-blue-800 border-blue-300",
+    "aprovado": "bg-green-100 text-green-800 border-green-300",
+    "rejeitado": "bg-red-100 text-red-800 border-red-300",
   };
   return colorMap[status] || "bg-gray-100 text-gray-800 border-gray-300";
+};
+
+const getStatusLabel = (status: string) => {
+  const labelMap: Record<string, string> = {
+    "pendente": "Pendente",
+    "em_analise": "Em análise",
+    "aprovado": "Aprovado",
+    "rejeitado": "Rejeitado",
+  };
+  return labelMap[status] || status;
 };
 
 const Ideias = () => {
@@ -98,6 +52,7 @@ const Ideias = () => {
   const [busca, setBusca] = useState("");
   const [filtroCategoria, setFiltroCategoria] = useState<string>("todas");
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
+  const { data: problemas = [], isLoading } = useProblemas();
 
   const categorias = [
     "Iluminação pública",
@@ -110,17 +65,16 @@ const Ideias = () => {
   ];
 
   const problemasFiltrados = useMemo(() => {
-    return problemasMock.filter((problema) => {
+    return problemas.filter((problema) => {
       const matchBusca = problema.titulo.toLowerCase().includes(busca.toLowerCase()) ||
-                         problema.descricao.toLowerCase().includes(busca.toLowerCase()) ||
-                         problema.localizacao.toLowerCase().includes(busca.toLowerCase());
+                         problema.descricao.toLowerCase().includes(busca.toLowerCase());
       
       const matchCategoria = filtroCategoria === "todas" || problema.categoria === filtroCategoria;
       const matchStatus = filtroStatus === "todos" || problema.status === filtroStatus;
 
       return matchBusca && matchCategoria && matchStatus;
     });
-  }, [busca, filtroCategoria, filtroStatus]);
+  }, [busca, filtroCategoria, filtroStatus, problemas]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -193,14 +147,17 @@ const Ideias = () => {
                   <SelectItem value="todos" className="text-sm sm:text-base py-2 sm:py-3 min-h-[44px] cursor-pointer">
                     Todos os status
                   </SelectItem>
-                  <SelectItem value="Pendente" className="text-sm sm:text-base py-2 sm:py-3 min-h-[44px] cursor-pointer">
+                  <SelectItem value="pendente" className="text-sm sm:text-base py-2 sm:py-3 min-h-[44px] cursor-pointer">
                     Pendente
                   </SelectItem>
-                  <SelectItem value="Em análise" className="text-sm sm:text-base py-2 sm:py-3 min-h-[44px] cursor-pointer">
+                  <SelectItem value="em_analise" className="text-sm sm:text-base py-2 sm:py-3 min-h-[44px] cursor-pointer">
                     Em análise
                   </SelectItem>
-                  <SelectItem value="Resolvido" className="text-sm sm:text-base py-2 sm:py-3 min-h-[44px] cursor-pointer">
-                    Resolvido
+                  <SelectItem value="aprovado" className="text-sm sm:text-base py-2 sm:py-3 min-h-[44px] cursor-pointer">
+                    Aprovado
+                  </SelectItem>
+                  <SelectItem value="rejeitado" className="text-sm sm:text-base py-2 sm:py-3 min-h-[44px] cursor-pointer">
+                    Rejeitado
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -209,7 +166,7 @@ const Ideias = () => {
 
           {/* Results Counter */}
           <p className="text-xs sm:text-sm text-muted-foreground">
-            Mostrando {problemasFiltrados.length} de {problemasMock.length} problemas
+            Mostrando {problemasFiltrados.length} de {problemas.length} problemas
           </p>
         </div>
       </div>
@@ -217,7 +174,13 @@ const Ideias = () => {
       {/* Problems List */}
       <main className="px-4 sm:px-6 md:px-8 py-6 sm:py-8 md:py-10 pb-40 sm:pb-36 md:pb-32">
         <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">
-          {problemasFiltrados.length === 0 ? (
+          {isLoading ? (
+            <Card className="p-6 sm:p-8 md:p-12 text-center">
+              <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground">
+                Carregando problemas...
+              </p>
+            </Card>
+          ) : problemasFiltrados.length === 0 ? (
             <Card className="p-6 sm:p-8 md:p-12 text-center">
               <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground">
                 Nenhum problema encontrado com os filtros selecionados.
@@ -253,13 +216,11 @@ const Ideias = () => {
                           {problema.categoria}
                         </Badge>
                         <Badge className={`text-xs sm:text-sm md:text-base py-1 sm:py-1.5 px-2 sm:px-4 border-2 ${getStatusColor(problema.status)}`}>
-                          {problema.status}
+                          {getStatusLabel(problema.status)}
                         </Badge>
-                      </div>
-
-                      <div className="flex items-center text-sm sm:text-base md:text-lg text-muted-foreground">
-                        <MapPin className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2 flex-shrink-0" />
-                        <span className="break-words">{problema.localizacao}</span>
+                        <Badge variant="secondary" className="text-xs sm:text-sm md:text-base py-1 sm:py-1.5 px-2 sm:px-4">
+                          {problema.votos} votos
+                        </Badge>
                       </div>
                     </div>
 
