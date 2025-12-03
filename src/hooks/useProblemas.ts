@@ -10,7 +10,6 @@ export interface Problema {
   latitude: number;
   longitude: number;
   status: string;
-  votos: number;
   created_at: string;
   updated_at: string;
 }
@@ -73,28 +72,3 @@ export const useCriarProblema = () => {
   });
 };
 
-// Hook para atualizar votos de um problema
-export const useAtualizarVotos = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ id, votos }: { id: string; votos: number }) => {
-      const { data, error } = await supabase
-        .from("problemas")
-        .update({ votos })
-        .eq("id", id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error("Erro ao atualizar votos:", error);
-        throw error;
-      }
-
-      return data as Problema;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["problemas"] });
-    },
-  });
-};
