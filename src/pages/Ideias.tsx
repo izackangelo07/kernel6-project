@@ -218,9 +218,6 @@ const Ideias = () => {
                         <Badge className={`text-xs sm:text-sm md:text-base py-1 sm:py-1.5 px-2 sm:px-4 border-2 ${getStatusColor(problema.status)}`}>
                           {getStatusLabel(problema.status)}
                         </Badge>
-                        <Badge variant="secondary" className="text-xs sm:text-sm md:text-base py-1 sm:py-1.5 px-2 sm:px-4">
-                          {problema.votos} votos
-                        </Badge>
                       </div>
                     </div>
 

@@ -261,25 +261,6 @@ const PainelSonhos = () => {
           ))}
         </div>
 
-        {/* Rodapé */}
-        <div className="text-center space-y-3 sm:space-y-4 bg-white/60 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-lg">
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
-            <Button
-              variant="outline"
-              onClick={() => navigate("/ideias")}
-              className="w-full sm:w-auto min-h-[44px] sm:min-h-[48px] px-4 sm:px-6 bg-white hover:bg-gray-50"
-            >
-              ✨ Adicionar Nova Ideia
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => navigate("/como-funciona")}
-              className="w-full sm:w-auto min-h-[44px] sm:min-h-[48px] px-4 sm:px-6 hover:bg-white/50"
-            >
-              ❓ Como funciona
-            </Button>
-          </div>
-        </div>
       </div>
 
       {/* Modal de Visualização */}

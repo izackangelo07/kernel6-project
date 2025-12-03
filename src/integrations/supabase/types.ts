@@ -25,7 +25,6 @@ export type Database = {
           status: string
           titulo: string
           updated_at: string
-          votos: number
         }
         Insert: {
           categoria: string
@@ -37,7 +36,6 @@ export type Database = {
           status?: string
           titulo: string
           updated_at?: string
-          votos?: number
         }
         Update: {
           categoria?: string
@@ -49,7 +47,6 @@ export type Database = {
           status?: string
           titulo?: string
           updated_at?: string
-          votos?: number
         }
         Relationships: []
       }
