@@ -1,13 +1,67 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import communityIllustration from "@/assets/community-illustration.png";
-import { HelpCircle } from "lucide-react";
+import { HelpCircle, LogIn, LogOut, Shield } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user, profile, isAdmin, signOut, isLoading } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success("Logout realizado com sucesso!");
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* Header with auth buttons */}
+      <header className="border-b border-border bg-card px-4 sm:px-6 py-3">
+        <div className="container mx-auto flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            {user && profile && (
+              <span>Olá, {profile.nome}</span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {isAdmin && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/admin")}
+                className="min-h-[40px]"
+              >
+                <Shield className="h-4 w-4 mr-2" />
+                Admin
+              </Button>
+            )}
+            {user ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSignOut}
+                className="min-h-[40px]"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sair
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/auth")}
+                className="min-h-[40px]"
+                disabled={isLoading}
+              >
+                <LogIn className="h-4 w-4 mr-2" />
+                Entrar
+              </Button>
+            )}
+          </div>
+        </div>
+      </header>
+
       {/* Main Content */}
       <main className="flex-1 container mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8 md:py-12 flex flex-col items-center justify-center">
         <div className="w-full max-w-3xl flex flex-col items-center space-y-4 sm:space-y-5 md:space-y-6">
