@@ -274,56 +274,6 @@ const Mapa = () => {
               </div>
             </Card>
 
-            {/* Problems List Card */}
-            <Card className="p-4 sm:p-6 bg-card">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base sm:text-lg md:text-xl font-semibold text-foreground">
-                  Problemas no Mapa
-                </h2>
-                <Badge className="bg-primary/10 text-primary border-primary/20">
-                  {problemas.length}
-                </Badge>
-              </div>
-
-              <div className="space-y-3 max-h-[300px] sm:max-h-[400px] overflow-y-auto">
-                {isLoading ? (
-                  <p className="text-center text-sm text-muted-foreground py-4">Carregando problemas...</p>
-                ) : problemas.length === 0 ? (
-                  <p className="text-center text-sm text-muted-foreground py-4">Nenhum problema registrado</p>
-                ) : (
-                  problemas.map((problema) => {
-                    const Icon = getCategoriaIcon(problema.categoria);
-                    return (
-                      <div
-                        key={problema.id}
-                        className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors cursor-pointer"
-                      >
-                        <div className={`${getCategoriaColor(problema.categoria)} rounded-full p-2 flex-shrink-0`}>
-                          <Icon className="h-4 w-4 text-white" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs sm:text-sm font-medium text-foreground truncate">
-                            {problema.titulo}
-                          </p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {problema.categoria}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate("/ideias")}
-                className="w-full mt-4 min-h-[44px]"
-              >
-                Ver Todos os Problemas
-              </Button>
-            </Card>
 
             {/* Instructions Card */}
             <Card className="p-4 sm:p-6 bg-primary/5 border-primary/20">
