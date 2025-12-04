@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, Mail, Lock, User } from "lucide-react";
 import { z } from "zod";
@@ -61,6 +62,16 @@ const Auth = () => {
     }
   };
 
+  const promoteToAdmin = async (userId: string) => {
+    const { data, error } = await supabase.rpc("promote_first_admin", {
+      _user_id: userId,
+    });
+    
+    if (!error && data) {
+      toast.success("Você foi promovido a administrador!");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -90,6 +101,11 @@ const Auth = () => {
             toast.error("Erro ao criar conta");
           }
         } else {
+          // Tentar promover primeiro usuário a admin
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user) {
+            await promoteToAdmin(session.user.id);
+          }
           toast.success("Conta criada com sucesso!");
           navigate("/");
         }
