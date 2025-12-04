@@ -141,95 +141,95 @@ const Auth = () => {
       </header>
 
       {/* Main Content - Centralizado e responsivo */}
-      <main className="flex-1 flex items-center justify-center px-3 sm:px-6 md:px-8 py-4 sm:py-6 md:py-8">
+      <main className="flex-1 flex items-center justify-center px-3 sm:px-6 md:px-8 py-6 sm:py-8 md:py-12">
         <div className="w-full max-w-7xl mx-auto flex justify-center">
-          <Card className="w-full max-w-md sm:max-w-lg">
-            <CardHeader className="text-center space-y-2">
-              <CardTitle className="text-xl sm:text-2xl md:text-3xl">
+          <Card className="w-full max-w-md sm:max-w-xl md:max-w-2xl">
+            <CardHeader className="text-center space-y-3 sm:space-y-4">
+              <CardTitle className="text-2xl sm:text-3xl md:text-4xl">
                 {isLogin ? "Entrar" : "Criar Conta"}
               </CardTitle>
-              <CardDescription className="text-sm sm:text-base">
+              <CardDescription className="text-base sm:text-lg">
                 {isLogin
                   ? "Entre com suas credenciais"
                   : "Preencha os dados para criar sua conta"}
               </CardDescription>
             </CardHeader>
             
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+            <CardContent className="px-4 sm:px-8">
+              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                 {!isLogin && (
                   <div className="space-y-2">
-                    <Label htmlFor="nome" className="text-sm sm:text-base">Nome</Label>
+                    <Label htmlFor="nome" className="text-base sm:text-lg font-medium">Nome</Label>
                     <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                       <Input
                         id="nome"
                         type="text"
-                        placeholder="Seu nome"
+                        placeholder="Seu nome completo"
                         value={formData.nome}
                         onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                        className="pl-10 h-10 sm:h-12 text-sm sm:text-base"
+                        className="pl-12 h-12 sm:h-14 text-base sm:text-lg"
                       />
                     </div>
                     {errors.nome && (
-                      <p className="text-xs sm:text-sm text-destructive">{errors.nome}</p>
+                      <p className="text-sm sm:text-base text-destructive">{errors.nome}</p>
                     )}
                   </div>
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm sm:text-base">Email</Label>
+                  <Label htmlFor="email" className="text-base sm:text-lg font-medium">Email</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input
                       id="email"
                       type="email"
                       placeholder="seu@email.com"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="pl-10 h-10 sm:h-12 text-sm sm:text-base"
+                      className="pl-12 h-12 sm:h-14 text-base sm:text-lg"
                     />
                   </div>
                   {errors.email && (
-                    <p className="text-xs sm:text-sm text-destructive">{errors.email}</p>
+                    <p className="text-sm sm:text-base text-destructive">{errors.email}</p>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm sm:text-base">Senha</Label>
+                  <Label htmlFor="password" className="text-base sm:text-lg font-medium">Senha</Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input
                       id="password"
                       type="password"
                       placeholder="••••••"
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="pl-10 h-10 sm:h-12 text-sm sm:text-base"
+                      className="pl-12 h-12 sm:h-14 text-base sm:text-lg"
                     />
                   </div>
                   {errors.password && (
-                    <p className="text-xs sm:text-sm text-destructive">{errors.password}</p>
+                    <p className="text-sm sm:text-base text-destructive">{errors.password}</p>
                   )}
                 </div>
 
                 <Button
                   type="submit"
-                  className="w-full h-10 sm:h-12 text-sm sm:text-base"
+                  className="w-full h-12 sm:h-14 text-base sm:text-lg font-medium"
                   disabled={loading}
                 >
                   {loading ? "Carregando..." : isLogin ? "Entrar" : "Criar Conta"}
                 </Button>
               </form>
 
-              <div className="mt-4 sm:mt-6 text-center">
+              <div className="mt-6 sm:mt-8 text-center">
                 <button
                   type="button"
                   onClick={() => {
                     setIsLogin(!isLogin);
                     setErrors({});
                   }}
-                  className="text-xs sm:text-sm text-primary hover:underline"
+                  className="text-sm sm:text-base text-primary hover:underline font-medium"
                 >
                   {isLogin
                     ? "Não tem conta? Criar uma"
