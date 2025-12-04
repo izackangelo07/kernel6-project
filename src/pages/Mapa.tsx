@@ -613,7 +613,15 @@ const Mapa = () => {
       {/* Main Content */}
       <main className="flex-1 px-3 sm:px-6 md:px-8 py-3 sm:py-4 md:py-6">
         <div className="max-w-7xl mx-auto h-full flex flex-col gap-4 sm:gap-6">
-          {/* 🔍 Barra de Pesquisa */}
+          
+        {/* 🌍 Container do Mapa com Controles */}
+          <div className="relative w-full rounded-lg sm:rounded-xl overflow-hidden shadow-lg border border-border">
+            <div 
+              ref={mapContainerRef} 
+              className="w-full h-[60vh] sm:h-[65vh] md:h-[70vh]"
+            />
+        
+        {/* 🔍 Barra de Pesquisa */}
           <div className="relative w-full">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -696,13 +704,6 @@ const Mapa = () => {
               </div>
             )}
           </div>
-
-          {/* 🌍 Container do Mapa com Controles */}
-          <div className="relative w-full rounded-lg sm:rounded-xl overflow-hidden shadow-lg border border-border">
-            <div 
-              ref={mapContainerRef} 
-              className="w-full h-[60vh] sm:h-[65vh] md:h-[70vh]"
-            />
             
             {/* Controles customizados para mobile */}
             {isMobile && (
