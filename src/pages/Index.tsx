@@ -16,9 +16,9 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header with auth buttons */}
-      <header className="border-b border-border bg-card px-4 sm:px-6 py-3">
-        <div className="container mx-auto flex items-center justify-between">
+      {/* Header with auth buttons - MAX-W-7XL */}
+      <header className="border-b border-border bg-card px-3 sm:px-6 md:px-8 py-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
             {user && profile && (
               <span>Olá, {profile.nome}</span>
@@ -62,56 +62,58 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 container mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8 md:py-12 flex flex-col items-center justify-center">
-        <div className="w-full max-w-3xl flex flex-col items-center space-y-4 sm:space-y-5 md:space-y-6">
-          {/* Community Illustration */}
-          <div className="w-full flex justify-center mb-2 sm:mb-4">
-            <img 
-              src={communityIllustration} 
-              alt="Ilustração da comunidade" 
-              className="w-full max-w-lg h-auto object-contain"
-            />
-          </div>
+      {/* Main Content - MAX-W-7XL */}
+      <main className="flex-1 px-3 sm:px-6 md:px-8 py-6 sm:py-8 md:py-12">
+        <div className="max-w-7xl mx-auto flex flex-col items-center justify-center">
+          <div className="w-full flex flex-col items-center space-y-4 sm:space-y-5 md:space-y-6">
+            {/* Community Illustration */}
+            <div className="w-full flex justify-center mb-2 sm:mb-4">
+              <img 
+                src={communityIllustration} 
+                alt="Ilustração da comunidade" 
+                className="w-full max-w-lg h-auto object-contain"
+              />
+            </div>
 
-          {/* Title */}
-          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-semibold text-center text-foreground leading-tight">
-            Conte sua ideia ou problema do bairro
-          </h1>
+            {/* Title */}
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-semibold text-center text-foreground leading-tight">
+              Conte sua ideia ou problema do bairro
+            </h1>
 
-          {/* Subtitle */}
-          <p className="text-sm sm:text-base md:text-lg text-muted-foreground text-center max-w-2xl">
-            Participe e ajude a melhorar nossa comunidade.
-          </p>
+            {/* Subtitle */}
+            <p className="text-sm sm:text-base md:text-lg text-muted-foreground text-center max-w-2xl">
+              Participe e ajude a melhorar nossa comunidade.
+            </p>
 
-          {/* Buttons */}
-          <div className="w-full max-w-lg space-y-3 sm:space-y-4 pt-2 sm:pt-4">
-            <Button 
-              size="lg" 
-              className="w-full min-h-[48px] sm:min-h-[56px] text-sm sm:text-base"
-              onClick={() => navigate("/registrar")}
-            >
-              Registrar Problema ou Ideia
-            </Button>
+            {/* Buttons */}
+            <div className="w-full max-w-lg space-y-3 sm:space-y-4 pt-2 sm:pt-4">
+              <Button 
+                size="lg" 
+                className="w-full min-h-[48px] sm:min-h-[56px] text-sm sm:text-base"
+                onClick={() => navigate("/registrar")}
+              >
+                Registrar Problema ou Ideia
+              </Button>
 
-            <Button 
-              variant="secondary" 
-              size="lg" 
-              className="w-full min-h-[48px] sm:min-h-[56px] text-sm sm:text-base"
-              onClick={() => navigate("/ideias")}
-            >
-              Ver Ideias da Comunidade
-            </Button>
+              <Button 
+                variant="secondary" 
+                size="lg" 
+                className="w-full min-h-[48px] sm:min-h-[56px] text-sm sm:text-base"
+                onClick={() => navigate("/ideias")}
+              >
+                Ver Ideias da Comunidade
+              </Button>
 
-            <Button 
-              variant="outline" 
-              size="lg" 
-              className="w-full min-h-[48px] sm:min-h-[56px] text-sm sm:text-base bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 border-2 border-purple-200"
-              onClick={() => navigate("/painel-sonhos")}
-            >
-              <span className="mr-2">🌟</span>
-              Painel dos Sonhos do Bairro
-            </Button>
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="w-full min-h-[48px] sm:min-h-[56px] text-sm sm:text-base bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 border-2 border-purple-200"
+                onClick={() => navigate("/painel-sonhos")}
+              >
+                <span className="mr-2">🌟</span>
+                Painel dos Sonhos do Bairro
+              </Button>
+            </div>
           </div>
         </div>
       </main>
