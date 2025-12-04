@@ -22,6 +22,14 @@ export interface NovoProblema {
   longitude: number;
 }
 
+export interface AtualizarProblema {
+  id: string;
+  titulo?: string;
+  descricao?: string;
+  categoria?: string;
+  status?: string;
+}
+
 // Hook para buscar todos os problemas
 export const useProblemas = () => {
   return useQuery({
@@ -72,3 +80,62 @@ export const useCriarProblema = () => {
   });
 };
 
+// Hook para atualizar um problema
+export const useAtualizarProblema = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: AtualizarProblema) => {
+      const { data, error } = await supabase
+        .from("problemas")
+        .update(updates)
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Erro ao atualizar problema:", error);
+        throw error;
+      }
+
+      return data as Problema;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["problemas"] });
+      toast.success("Problema atualizado com sucesso!");
+    },
+    onError: (error) => {
+      console.error("Erro ao atualizar problema:", error);
+      toast.error("Erro ao atualizar problema. Tente novamente.");
+    },
+  });
+};
+
+// Hook para excluir um problema
+export const useExcluirProblema = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("problemas")
+        .delete()
+        .eq("id", id);
+
+      if (error) {
+        console.error("Erro ao excluir problema:", error);
+        throw error;
+      }
+
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["problemas"] });
+      toast.success("Problema excluído com sucesso!");
+    },
+    onError: (error) => {
+      console.error("Erro ao excluir problema:", error);
+      toast.error("Erro ao excluir problema. Tente novamente.");
+    },
+  });
+};
