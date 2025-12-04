@@ -16,24 +16,24 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header with auth buttons - MAX-W-7XL */}
-      <header className="border-b border-border bg-card px-3 sm:px-6 md:px-8 py-3">
+      {/* Header with auth buttons - Responsivo */}
+      <header className="border-b border-border bg-card px-3 sm:px-6 md:px-8 py-2 sm:py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
+          <div className="text-xs sm:text-sm text-muted-foreground truncate max-w-[40%]">
             {user && profile && (
-              <span>Olá, {profile.nome}</span>
+              <span className="truncate">Olá, {profile.nome}</span>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             {isAdmin && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => navigate("/admin")}
-                className="min-h-[40px]"
+                className="h-8 sm:h-10 px-2 sm:px-4 text-xs sm:text-sm"
               >
-                <Shield className="h-4 w-4 mr-2" />
-                Admin
+                <Shield className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Admin</span>
               </Button>
             )}
             {user ? (
@@ -41,55 +41,56 @@ const Index = () => {
                 variant="ghost"
                 size="sm"
                 onClick={handleSignOut}
-                className="min-h-[40px]"
+                className="h-8 sm:h-10 px-2 sm:px-4 text-xs sm:text-sm"
               >
-                <LogOut className="h-4 w-4 mr-2" />
-                Sair
+                <LogOut className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Sair</span>
               </Button>
             ) : (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => navigate("/auth")}
-                className="min-h-[40px]"
+                className="h-8 sm:h-10 px-2 sm:px-4 text-xs sm:text-sm"
                 disabled={isLoading}
               >
-                <LogIn className="h-4 w-4 mr-2" />
-                Entrar
+                <LogIn className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Entrar</span>
               </Button>
             )}
           </div>
         </div>
       </header>
 
-      {/* Main Content - MAX-W-7XL */}
-      <main className="flex-1 px-3 sm:px-6 md:px-8 py-6 sm:py-8 md:py-12">
-        <div className="max-w-7xl mx-auto flex flex-col items-center justify-center">
-          <div className="w-full flex flex-col items-center space-y-4 sm:space-y-5 md:space-y-6">
-            {/* Community Illustration */}
-            <div className="w-full flex justify-center mb-2 sm:mb-4">
+      {/* Main Content - Ocupa toda altura restante */}
+      <main className="flex-1 flex flex-col items-center justify-center px-3 sm:px-6 md:px-8 py-4 sm:py-6 md:py-8">
+        <div className="max-w-7xl mx-auto w-full flex flex-col items-center justify-center h-full">
+          <div className="w-full max-w-2xl mx-auto flex flex-col items-center justify-center space-y-4 sm:space-y-5 md:space-y-6">
+            
+            {/* Community Illustration - Responsivo */}
+            <div className="w-full flex justify-center px-2 sm:px-4">
               <img 
                 src={communityIllustration} 
                 alt="Ilustração da comunidade" 
-                className="w-full max-w-lg h-auto object-contain"
+                className="w-full max-w-[280px] sm:max-w-[400px] md:max-w-[500px] h-auto object-contain"
               />
             </div>
 
-            {/* Title */}
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-semibold text-center text-foreground leading-tight">
+            {/* Title - Responsivo */}
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-semibold text-center text-foreground leading-tight px-2">
               Conte sua ideia ou problema do bairro
             </h1>
 
-            {/* Subtitle */}
-            <p className="text-sm sm:text-base md:text-lg text-muted-foreground text-center max-w-2xl">
+            {/* Subtitle - Responsivo */}
+            <p className="text-xs sm:text-sm md:text-base text-muted-foreground text-center max-w-md sm:max-w-lg px-2">
               Participe e ajude a melhorar nossa comunidade.
             </p>
 
-            {/* Buttons */}
-            <div className="w-full max-w-lg space-y-3 sm:space-y-4 pt-2 sm:pt-4">
+            {/* Buttons - Responsivo e ocupa toda largura disponível */}
+            <div className="w-full space-y-3 sm:space-y-4 pt-2 sm:pt-4 px-2 sm:px-0">
               <Button 
                 size="lg" 
-                className="w-full min-h-[48px] sm:min-h-[56px] text-sm sm:text-base"
+                className="w-full h-12 sm:h-14 md:h-16 text-sm sm:text-base md:text-lg"
                 onClick={() => navigate("/registrar")}
               >
                 Registrar Problema ou Ideia
@@ -98,7 +99,7 @@ const Index = () => {
               <Button 
                 variant="secondary" 
                 size="lg" 
-                className="w-full min-h-[48px] sm:min-h-[56px] text-sm sm:text-base"
+                className="w-full h-12 sm:h-14 md:h-16 text-sm sm:text-base md:text-lg"
                 onClick={() => navigate("/ideias")}
               >
                 Ver Ideias da Comunidade
@@ -107,7 +108,7 @@ const Index = () => {
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="w-full min-h-[48px] sm:min-h-[56px] text-sm sm:text-base bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 border-2 border-purple-200"
+                className="w-full h-12 sm:h-14 md:h-16 text-sm sm:text-base md:text-lg bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 border-2 border-purple-200"
                 onClick={() => navigate("/painel-sonhos")}
               >
                 <span className="mr-2">🌟</span>
@@ -118,13 +119,13 @@ const Index = () => {
         </div>
       </main>
 
-      {/* Floating Help Button */}
+      {/* Floating Help Button - Responsivo */}
       <button
         onClick={() => navigate("/como-funciona")}
-        className="fixed bottom-6 right-6 w-14 h-14 sm:w-16 sm:h-16 md:w-[60px] md:h-[60px] rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all hover:scale-110 flex items-center justify-center z-50"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all hover:scale-110 flex items-center justify-center z-50"
         aria-label="Como funciona?"
       >
-        <HelpCircle className="w-6 h-6 sm:w-7 sm:h-7" />
+        <HelpCircle className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7" />
       </button>
     </div>
   );
