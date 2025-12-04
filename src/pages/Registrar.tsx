@@ -172,48 +172,41 @@ const Registrar = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header - Mais compacto em tablet */}
-      <header className={`border-b border-border bg-card px-4 sm:px-6 py-3 ${isTablet ? 'py-2' : 'sm:py-4'}`}>
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
+      {/* Header */}
+      <header className="border-b border-border bg-card px-4 sm:px-6 py-3 sm:py-4">
+        <div className="max-w-4xl mx-auto flex items-center justify-between gap-2">
           <Button
             variant="ghost"
-            size={isMobile ? "sm" : isTablet ? "sm" : "default"}
+            size={isMobile ? "sm" : "default"}
             onClick={() => navigate("/ideias")}
-            className={`${isTablet ? 'min-h-[36px]' : 'min-h-[40px] sm:min-h-[44px]'}`}
+            className="min-h-[40px] sm:min-h-[44px]"
           >
             <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 sm:mr-2" />
             <span className="hidden sm:inline">Voltar</span>
           </Button>
           
-          <h1 className={`font-semibold text-foreground text-center flex-1 truncate ${
-            isTablet ? 'text-lg' : 'text-lg sm:text-xl md:text-2xl'
-          }`}>
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground text-center flex-1 truncate">
             Registrar Problema
           </h1>
+          
+          {/* Espaçador para alinhamento */}
+          <div className="w-12" />
         </div>
       </header>
 
-      {/* Main Content - OTIMIZADO PARA TABLET PREENCHER ALTURA TOTAL */}
-      <main className="flex-1 px-3 sm:px-6 md:px-8 py-3">
-        <form onSubmit={handleSubmit} className="max-w-4xl mx-auto h-full">
-          {/* Container principal que preenche altura em tablet */}
-          <div className={`h-full flex flex-col ${
-            isTablet ? 'space-y-3 justify-between' : 'space-y-4 sm:space-y-6'
-          }`}>
-
-            {/* Conteúdo do formulário (ocupa espaço disponível) */}
-            <div className={`flex-1 ${
-              isTablet ? 'space-y-3 overflow-y-auto pr-1' : 'space-y-4 sm:space-y-6'
-            }`}>
+      {/* Main Content - USANDO ALTURA TOTAL SEM SCROLL */}
+      <main className="flex-1 flex flex-col px-4 sm:px-6 md:px-8">
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
+          {/* Container principal que preenche altura total */}
+          <div className="flex-1 flex flex-col py-3 sm:py-4">
+            
+            {/* Conteúdo do formulário (ocupa espaço disponível com scroll interno) */}
+            <div className="flex-1 overflow-y-auto pr-1 space-y-3 sm:space-y-4">
               {/* 1. Categoria */}
-              <Card className={`p-3 sm:p-4 border-border ${
-                isTablet ? 'p-3' : ''
-              }`}>
+              <Card className="p-3 sm:p-4 border-border">
                 <div className="space-y-2">
                   <div className="flex items-start justify-between">
-                    <Label htmlFor="categoria" className={`font-medium text-foreground ${
-                      isTablet ? 'text-sm' : 'text-base sm:text-lg'
-                    }`}>
+                    <Label htmlFor="categoria" className="font-medium text-foreground text-sm sm:text-base">
                       1. Tipo de Problema *
                     </Label>
                     {categoria && (
@@ -226,20 +219,16 @@ const Registrar = () => {
                   <Select value={categoria} onValueChange={setCategoria}>
                     <SelectTrigger 
                       id="categoria" 
-                      className={`${
-                        isTablet ? 'h-10 text-sm' : 'h-12 sm:h-14 text-sm sm:text-base'
-                      } ${categoria ? 'border-green-500' : ''}`}
+                      className={`h-10 sm:h-12 text-sm sm:text-base ${categoria ? 'border-green-500' : ''}`}
                     >
                       <SelectValue placeholder="Selecione..." />
                     </SelectTrigger>
-                    <SelectContent className="bg-card border-2 z-50">
+                    <SelectContent className="bg-card border-2 z-50 max-h-60">
                       {categorias.map((cat) => (
                         <SelectItem 
                           key={cat} 
                           value={cat}
-                          className={`${
-                            isTablet ? 'text-sm py-2' : 'text-sm sm:text-base py-3'
-                          }`}
+                          className="text-sm sm:text-base py-2 sm:py-3"
                         >
                           {cat}
                         </SelectItem>
@@ -257,14 +246,10 @@ const Registrar = () => {
               </Card>
 
               {/* 2. Título */}
-              <Card className={`p-3 sm:p-4 border-border ${
-                isTablet ? 'p-3' : ''
-              }`}>
+              <Card className="p-3 sm:p-4 border-border">
                 <div className="space-y-2">
                   <div className="flex items-start justify-between">
-                    <Label htmlFor="titulo" className={`font-medium text-foreground ${
-                      isTablet ? 'text-sm' : 'text-base sm:text-lg'
-                    }`}>
+                    <Label htmlFor="titulo" className="font-medium text-foreground text-sm sm:text-base">
                       2. Título do Problema *
                     </Label>
                     {titulo && (
@@ -279,9 +264,7 @@ const Registrar = () => {
                     value={titulo}
                     onChange={(e) => setTitulo(e.target.value.slice(0, 100))}
                     placeholder="Ex: Poste de luz quebrado na esquina"
-                    className={`${
-                      isTablet ? 'h-10 text-sm' : 'h-12 sm:h-14 text-sm sm:text-base'
-                    } ${titulo ? 'border-green-500' : ''}`}
+                    className={`h-10 sm:h-12 text-sm sm:text-base ${titulo ? 'border-green-500' : ''}`}
                     maxLength={100}
                   />
                   
@@ -294,14 +277,10 @@ const Registrar = () => {
               </Card>
 
               {/* 3. Descrição */}
-              <Card className={`p-3 sm:p-4 border-border ${
-                isTablet ? 'p-3' : ''
-              }`}>
+              <Card className="p-3 sm:p-4 border-border">
                 <div className="space-y-2">
                   <div className="flex items-start justify-between">
-                    <Label htmlFor="descricao" className={`font-medium text-foreground ${
-                      isTablet ? 'text-sm' : 'text-base sm:text-lg'
-                    }`}>
+                    <Label htmlFor="descricao" className="font-medium text-foreground text-sm sm:text-base">
                       3. Descrição Detalhada *
                     </Label>
                     {descricao && (
@@ -316,9 +295,7 @@ const Registrar = () => {
                     value={descricao}
                     onChange={(e) => setDescricao(e.target.value.slice(0, 500))}
                     placeholder="Descreva com detalhes o problema encontrado..."
-                    className={`${
-                      isTablet ? 'min-h-[80px] text-sm' : 'min-h-[100px] sm:min-h-[120px] text-sm sm:text-base'
-                    } ${descricao ? 'border-green-500' : ''}`}
+                    className={`min-h-[80px] sm:min-h-[100px] text-sm sm:text-base resize-none ${descricao ? 'border-green-500' : ''}`}
                     maxLength={500}
                   />
                   
@@ -331,13 +308,9 @@ const Registrar = () => {
               </Card>
 
               {/* 4. Foto (Opcional) */}
-              <Card className={`p-3 sm:p-4 border-border ${
-                isTablet ? 'p-3' : ''
-              }`}>
+              <Card className="p-3 sm:p-4 border-border">
                 <div className="space-y-2">
-                  <Label className={`font-medium text-foreground ${
-                    isTablet ? 'text-sm' : 'text-base sm:text-lg'
-                  }`}>
+                  <Label className="font-medium text-foreground text-sm sm:text-base">
                     4. Foto (Opcional)
                   </Label>
                   
@@ -347,9 +320,7 @@ const Registrar = () => {
                         <img 
                           src={fotoPreview} 
                           alt="Preview" 
-                          className={`w-full ${
-                            isTablet ? 'h-32' : 'h-40 sm:h-48'
-                          } object-cover`}
+                          className="w-full h-32 sm:h-40 object-cover"
                         />
                         <Button
                           type="button"
@@ -366,19 +337,19 @@ const Registrar = () => {
                     <Button
                       type="button"
                       variant={fotoPreview ? "outline" : "default"}
-                      size={isTablet ? "sm" : "default"}
+                      size="sm"
                       onClick={handleFotoCapture}
-                      className="w-full"
+                      className="w-full h-10 sm:h-12"
                     >
                       {fotoPreview ? (
                         <>
-                          <ImageIcon className={`mr-2 ${isTablet ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                          <ImageIcon className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                           Alterar Foto
                         </>
                       ) : (
                         <>
-                          <Camera className={`mr-2 ${isTablet ? 'h-3 w-3' : 'h-4 w-4'}`} />
-                          {isTablet ? "Adicionar Foto" : "Adicionar Foto do Problema"}
+                          <Camera className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                          {isMobile ? "Adicionar Foto" : "Adicionar Foto do Problema"}
                         </>
                       )}
                     </Button>
@@ -387,14 +358,10 @@ const Registrar = () => {
               </Card>
 
               {/* 5. Localização */}
-              <Card className={`p-3 sm:p-4 border-border ${
-                isTablet ? 'p-3' : ''
-              }`}>
+              <Card className="p-3 sm:p-4 border-border">
                 <div className="space-y-2">
                   <div className="flex items-start justify-between">
-                    <Label className={`font-medium text-foreground ${
-                      isTablet ? 'text-sm' : 'text-base sm:text-lg'
-                    }`}>
+                    <Label className="font-medium text-foreground text-sm sm:text-base">
                       5. Localização *
                     </Label>
                     {localizacao && (
@@ -407,19 +374,18 @@ const Registrar = () => {
                   <Button
                     type="button"
                     variant={localizacao ? "outline" : "default"}
-                    size={isTablet ? "sm" : "default"}
+                    size="sm"
                     onClick={handleGoToMap}
-                    className={`w-full ${
-                      isTablet ? 'h-10' : 'h-12 sm:h-14'
-                    } ${localizacao 
-                      ? 'border-green-500 bg-green-50 hover:bg-green-100 text-green-700' 
-                      : ''
+                    className={`w-full h-10 sm:h-12 ${
+                      localizacao 
+                        ? 'border-green-500 bg-green-50 hover:bg-green-100 text-green-700' 
+                        : ''
                     }`}
                   >
-                    <MapPin className={`mr-2 ${
-                      isTablet ? 'h-3 w-3' : 'h-4 w-4'
-                    } ${localizacao ? 'text-green-600' : ''}`} />
-                    <span className="text-left flex-1 truncate">
+                    <MapPin className={`mr-2 h-3 w-3 sm:h-4 sm:w-4 ${
+                      localizacao ? 'text-green-600' : ''
+                    }`} />
+                    <span className="text-left flex-1 truncate text-sm sm:text-base">
                       {localizacao 
                         ? "✓ Local Marcado" 
                         : "Marcar no Mapa"
@@ -428,7 +394,7 @@ const Registrar = () => {
                   </Button>
                   
                   {localizacao?.endereco && (
-                    <div className="mt-2 p-2 bg-muted/30 rounded text-xs">
+                    <div className="mt-2 p-2 bg-muted/30 rounded text-xs sm:text-sm">
                       <div className="flex items-start gap-1">
                         <MapPin className="h-3 w-3 text-green-600 flex-shrink-0 mt-0.5" />
                         <div className="flex-1 min-w-0">
@@ -448,17 +414,13 @@ const Registrar = () => {
               </Card>
             </div>
 
-            {/* Botão de Envio (fixo na parte inferior em tablet) */}
-            <div className={`pt-3 ${
-              isTablet ? 'sticky bottom-0 bg-background/95 backdrop-blur-sm pb-3 -mx-3 sm:-mx-6 md:-mx-8 px-3 sm:px-6 md:px-8' : ''
-            }`}>
+            {/* Botão de Envio (fixo na parte inferior) */}
+            <div className="pt-3 sm:pt-4 sticky bottom-0 bg-background/95 backdrop-blur-sm pb-3">
               <Button
                 type="submit"
-                size={isTablet ? "sm" : "default"}
+                size={isMobile ? "sm" : "default"}
                 disabled={criarProblema.isPending || !categoria || !titulo || !descricao || !localizacao}
-                className={`w-full ${
-                  isTablet ? 'h-10' : 'h-12 sm:h-14'
-                }`}
+                className="w-full h-10 sm:h-12"
               >
                 {criarProblema.isPending ? (
                   <span className="flex items-center gap-2">
@@ -467,10 +429,8 @@ const Registrar = () => {
                   </span>
                 ) : (
                   <>
-                    <Check className={`mr-2 ${
-                      isTablet ? 'h-3 w-3' : 'h-4 w-4 sm:h-5 sm:w-5'
-                    }`} />
-                    {isTablet ? "Enviar" : "Enviar Registro"}
+                    <Check className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                    {isMobile ? "Enviar" : "Enviar Registro"}
                   </>
                 )}
               </Button>
