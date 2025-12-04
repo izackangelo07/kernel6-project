@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Camera, MapPin, X, Check, AlertCircle, Image as ImageIcon, Save } from "lucide-react";
+import { ArrowLeft, Camera, MapPin, X, Check, AlertCircle, Image as ImageIcon } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -169,7 +169,6 @@ const Registrar = () => {
     salvarDados();
     navigate("/mapa");
   };
-
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -445,20 +444,6 @@ const Registrar = () => {
                 )}
               </div>
             </Card>
-            
-                <div className="text-right">
-                  <p className={`text-xs font-medium ${
-                    categoria && titulo && descricao && localizacao 
-                      ? 'text-green-600' 
-                      : 'text-yellow-600'
-                  }`}>
-                    {categoria && titulo && descricao && localizacao 
-                      ? "Pronto!" 
-                      : "Complete"}
-                  </p>
-                </div>
-              </div>
-            </div>
 
             {/* Botão de Envio */}
             <div className="pt-3">
