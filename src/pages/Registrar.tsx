@@ -55,11 +55,11 @@ const Registrar = () => {
       if (width === 1024 && height === 1366) {
         // iPad Pro 12.9" portrait - +10%
         setIsLargeTablet(true);
-        setFontSize("text-base");
+        setFontSize("text-lg");
       } else if (width === 820 && height === 1180) {
         // iPad Air 10.9" portrait - padrão
         setIsMediumTablet(true);
-        setFontSize("text-sm");
+        setFontSize("text-base");
       } else if (width === 768 && height === 1024) {
         // iPad Mini 7.9" portrait - +5%
         setIsSmallTablet(true);
@@ -81,8 +81,8 @@ const Registrar = () => {
 
   // Funções para obter as alturas baseadas na resolução
   const getInputHeight = () => {
-    if (isLargeTablet) return "h-20"; // 10% maior (iPad Pro)
-    if (isMediumTablet) return "h-16"; // padrão (iPad Air)
+    if (isLargeTablet) return "h-24"; // 10% maior (iPad Pro)
+    if (isMediumTablet) return "h-20"; // padrão (iPad Air)
     if (isSmallTablet) return "h-12"; // 5% maior (iPad Mini)
     if (isMobile) return "h-10"; // mobile
     return "h-12"; // desktop padrão
@@ -97,8 +97,8 @@ const Registrar = () => {
   };
 
   const getButtonHeight = () => {
-    if (isLargeTablet) return "h-20"; // 10% maior
-    if (isMediumTablet) return "h-16"; // padrão
+    if (isLargeTablet) return "h-24"; // 10% maior
+    if (isMediumTablet) return "h-20"; // padrão
     if (isSmallTablet) return "h-12"; // 5% maior
     if (isMobile) return "h-10"; // mobile
     return "h-12"; // desktop
