@@ -170,18 +170,6 @@ const Registrar = () => {
     navigate("/mapa");
   };
 
-  const limparFormulario = () => {
-    if (window.confirm("Deseja limpar todo o formulário?")) {
-      localStorage.removeItem("registroDados");
-      setCategoria("");
-      setTitulo("");
-      setDescricao("");
-      setFoto(null);
-      setFotoPreview(null);
-      setLocalizacao(null);
-      toast.info("Formulário limpo");
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -203,19 +191,6 @@ const Registrar = () => {
           }`}>
             Registrar Problema
           </h1>
-          
-          <Button
-            variant="ghost"
-            size={isTablet ? "sm" : "default"}
-            onClick={limparFormulario}
-            className={`text-red-600 hover:text-red-700 hover:bg-red-50 ${
-              isTablet ? 'min-h-[36px]' : 'min-h-[40px]'
-            }`}
-            title="Limpar formulário"
-          >
-            <X className="h-4 w-4" />
-            <span className="hidden sm:inline sm:ml-2">Limpar</span>
-          </Button>
         </div>
       </header>
 
@@ -470,36 +445,7 @@ const Registrar = () => {
                 )}
               </div>
             </Card>
-
-            {/* Status de preenchimento - Mais compacto */}
-            <div className="bg-muted/30 p-3 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium mb-1">Status:</p>
-                  <div className="flex items-center gap-3">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                      categoria ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
-                    }`}>
-                      {categoria ? <Check className="h-3 w-3" /> : "1"}
-                    </div>
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                      titulo ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
-                    }`}>
-                      {titulo ? <Check className="h-3 w-3" /> : "2"}
-                    </div>
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                      descricao ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
-                    }`}>
-                      {descricao ? <Check className="h-3 w-3" /> : "3"}
-                    </div>
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                      localizacao ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
-                    }`}>
-                      {localizacao ? <Check className="h-3 w-3" /> : "4"}
-                    </div>
-                  </div>
-                </div>
-                
+            
                 <div className="text-right">
                   <p className={`text-xs font-medium ${
                     categoria && titulo && descricao && localizacao 
