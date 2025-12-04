@@ -16,12 +16,9 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useCriarProblema } from "@/hooks/useProblemas";
-import { useResponsive } from "@/hooks/useResponsive";
 
 const Registrar = () => {
   const navigate = useNavigate();
-  const { isMobile, isTablet, isDesktop } = useResponsive();
-  
   const [categoria, setCategoria] = useState("");
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
@@ -29,8 +26,84 @@ const Registrar = () => {
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
   const [localizacao, setLocalizacao] = useState<{ lat: number; lng: number; endereco?: string } | null>(null);
   const criarProblema = useCriarProblema();
+  const [isLargeTablet, setIsLargeTablet] = useState(false);
+  const [isMediumTablet, setIsMediumTablet] = useState(false);
+  const [isSmallTablet, setIsSmallTablet] = useState(false);
 
-  // Carregar dados salvos ao iniciar
+  // Verificar resolução da tela
+  useEffect(() => {
+    const checkResolution = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      
+      // Reset states
+      setIsLargeTablet(false);
+      setIsMediumTablet(false);
+      setIsSmallTablet(false);
+      
+      // Verificar resoluções específicas
+      if (width === 1024 && height === 1366) {
+        // iPad Pro 12.9" portrait
+        setIsLargeTablet(true);
+      } else if (width === 820 && height === 1180) {
+        // iPad Air 10.9" portrait
+        setIsMediumTablet(true);
+      } else if (width === 768 && height === 1024) {
+        // iPad Mini 7.9" portrait
+        setIsSmallTablet(true);
+      }
+    };
+
+    checkResolution();
+    window.addEventListener('resize', checkResolution);
+    
+    return () => window.removeEventListener('resize', checkResolution);
+  }, []);
+
+  // Funções para obter as alturas baseadas na resolução
+  const getInputHeight = () => {
+    if (isLargeTablet) return "h-14"; // 20% maior
+    if (isMediumTablet) return "h-13"; // 10% maior
+    if (isSmallTablet) return "h-12"; // 5% maior
+    return "h-12"; // padrão
+  };
+
+  const getTextareaHeight = () => {
+    if (isLargeTablet) return "min-h-[120px]"; // 20% maior
+    if (isMediumTablet) return "min-h-[110px]"; // 10% maior
+    if (isSmallTablet) return "min-h-[105px]"; // 5% maior
+    return "min-h-[100px]"; // padrão
+  };
+
+  const getButtonHeight = () => {
+    if (isLargeTablet) return "h-14"; // 20% maior
+    if (isMediumTablet) return "h-13"; // 10% maior
+    if (isSmallTablet) return "h-12"; // 5% maior
+    return "h-12"; // padrão
+  };
+
+  const getFotoPreviewHeight = () => {
+    if (isLargeTablet) return "h-48"; // 20% maior
+    if (isMediumTablet) return "h-44"; // 10% maior
+    if (isSmallTablet) return "h-42"; // 5% maior
+    return "h-40"; // padrão
+  };
+
+  const getCardPadding = () => {
+    if (isLargeTablet) return "p-5"; // 20% maior
+    if (isMediumTablet) return "p-4.5"; // Use p-5 com scale?
+    if (isSmallTablet) return "p-4"; // 5% maior
+    return "p-4"; // padrão
+  };
+
+  const getSpacing = () => {
+    if (isLargeTablet) return "space-y-4"; // 20% maior
+    if (isMediumTablet) return "space-y-3.5"; // 10% maior
+    if (isSmallTablet) return "space-y-3"; // 5% maior
+    return "space-y-3"; // padrão
+  };
+
+  // Efeito para carregar localização
   useEffect(() => {
     const loc = sessionStorage.getItem("localizacaoProblema");
     if (loc) {
@@ -41,18 +114,6 @@ const Registrar = () => {
       } catch (error) {
         console.error("Erro ao parsear localização:", error);
       }
-    }
-
-    try {
-      const dadosSalvos = localStorage.getItem("registroDados");
-      if (dadosSalvos) {
-        const dados = JSON.parse(dadosSalvos);
-        if (dados.categoria) setCategoria(dados.categoria);
-        if (dados.titulo) setTitulo(dados.titulo);
-        if (dados.descricao) setDescricao(dados.descricao);
-      }
-    } catch (error) {
-      console.error("Erro ao carregar dados salvos:", error);
     }
   }, []);
 
@@ -133,7 +194,7 @@ const Registrar = () => {
     input.type = "file";
     input.accept = "image/*";
     
-    if (isMobile) {
+    if (window.innerWidth < 768) {
       input.capture = "environment";
     }
     
@@ -172,12 +233,12 @@ const Registrar = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <header className="border-b border-border bg-card px-4 sm:px-6 py-3 sm:py-4">
+      {/* Header - MAX-W-7XL */}
+      <header className="border-b border-border bg-card px-3 sm:px-6 md:px-8 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
           <Button
             variant="ghost"
-            size={isMobile ? "sm" : "default"}
+            size={window.innerWidth < 640 ? "sm" : "default"}
             onClick={() => navigate("/ideias")}
             className="min-h-[40px] sm:min-h-[44px]"
           >
@@ -194,17 +255,17 @@ const Registrar = () => {
         </div>
       </header>
 
-      {/* Main Content - Ocupa toda a altura sem botão fixo */}
+      {/* Main Content - Ocupa toda altura sem botão fixo */}
       <main className="flex-1 flex flex-col min-h-0">
         <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
           {/* Container principal que preenche altura total */}
-          <div className="flex-1 flex flex-col min-h-0 px-4 sm:px-6 md:px-8 py-3 sm:py-4">
+          <div className="flex-1 flex flex-col min-h-0 px-3 sm:px-6 md:px-8 py-4">
             
             {/* Conteúdo do formulário com scroll interno */}
-            <div className="flex-1 overflow-y-auto min-h-0 space-y-3 sm:space-y-4 pb-3 sm:pb-4">
-              {/* 1. Categoria */}
-              <Card className="p-3 sm:p-4 border-border">
-                <div className="space-y-2">
+            <div className={`flex-1 overflow-y-auto min-h-0 ${getSpacing()} pb-4`}>
+              {/* 1. Categoria - Altura aumentada conforme resolução */}
+              <Card className={`${getCardPadding()} border-border`}>
+                <div className={getSpacing()}>
                   <div className="flex items-start justify-between">
                     <Label htmlFor="categoria" className="font-medium text-foreground text-sm sm:text-base">
                       1. Tipo de Problema *
@@ -219,7 +280,7 @@ const Registrar = () => {
                   <Select value={categoria} onValueChange={setCategoria}>
                     <SelectTrigger 
                       id="categoria" 
-                      className={`h-10 sm:h-12 text-sm sm:text-base ${categoria ? 'border-green-500' : ''}`}
+                      className={`${getInputHeight()} text-sm sm:text-base ${categoria ? 'border-green-500' : ''}`}
                     >
                       <SelectValue placeholder="Selecione..." />
                     </SelectTrigger>
@@ -245,9 +306,9 @@ const Registrar = () => {
                 </div>
               </Card>
 
-              {/* 2. Título */}
-              <Card className="p-3 sm:p-4 border-border">
-                <div className="space-y-2">
+              {/* 2. Título - Altura aumentada conforme resolução */}
+              <Card className={`${getCardPadding()} border-border`}>
+                <div className={getSpacing()}>
                   <div className="flex items-start justify-between">
                     <Label htmlFor="titulo" className="font-medium text-foreground text-sm sm:text-base">
                       2. Título do Problema *
@@ -264,7 +325,7 @@ const Registrar = () => {
                     value={titulo}
                     onChange={(e) => setTitulo(e.target.value.slice(0, 100))}
                     placeholder="Ex: Poste de luz quebrado na esquina"
-                    className={`h-10 sm:h-12 text-sm sm:text-base ${titulo ? 'border-green-500' : ''}`}
+                    className={`${getInputHeight()} text-sm sm:text-base ${titulo ? 'border-green-500' : ''}`}
                     maxLength={100}
                   />
                   
@@ -276,9 +337,9 @@ const Registrar = () => {
                 </div>
               </Card>
 
-              {/* 3. Descrição */}
-              <Card className="p-3 sm:p-4 border-border">
-                <div className="space-y-2">
+              {/* 3. Descrição - Altura aumentada conforme resolução */}
+              <Card className={`${getCardPadding()} border-border`}>
+                <div className={getSpacing()}>
                   <div className="flex items-start justify-between">
                     <Label htmlFor="descricao" className="font-medium text-foreground text-sm sm:text-base">
                       3. Descrição Detalhada *
@@ -295,7 +356,7 @@ const Registrar = () => {
                     value={descricao}
                     onChange={(e) => setDescricao(e.target.value.slice(0, 500))}
                     placeholder="Descreva com detalhes o problema encontrado..."
-                    className={`min-h-[80px] sm:min-h-[100px] text-sm sm:text-base resize-none ${descricao ? 'border-green-500' : ''}`}
+                    className={`${getTextareaHeight()} text-sm sm:text-base resize-none ${descricao ? 'border-green-500' : ''}`}
                     maxLength={500}
                   />
                   
@@ -307,20 +368,20 @@ const Registrar = () => {
                 </div>
               </Card>
 
-              {/* 4. Foto (Opcional) */}
-              <Card className="p-3 sm:p-4 border-border">
-                <div className="space-y-2">
+              {/* 4. Foto (Opcional) - Altura aumentada conforme resolução */}
+              <Card className={`${getCardPadding()} border-border`}>
+                <div className={getSpacing()}>
                   <Label className="font-medium text-foreground text-sm sm:text-base">
                     4. Foto (Opcional)
                   </Label>
                   
-                  <div className="space-y-3">
+                  <div className={getSpacing()}>
                     {fotoPreview && (
                       <div className="relative rounded-lg overflow-hidden border border-border">
                         <img 
                           src={fotoPreview} 
                           alt="Preview" 
-                          className="w-full h-32 sm:h-40 object-cover"
+                          className={`w-full ${getFotoPreviewHeight()} object-cover`}
                         />
                         <Button
                           type="button"
@@ -339,7 +400,7 @@ const Registrar = () => {
                       variant={fotoPreview ? "outline" : "default"}
                       size="sm"
                       onClick={handleFotoCapture}
-                      className="w-full h-10 sm:h-12"
+                      className={`w-full ${getButtonHeight()}`}
                     >
                       {fotoPreview ? (
                         <>
@@ -349,7 +410,7 @@ const Registrar = () => {
                       ) : (
                         <>
                           <Camera className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                          {isMobile ? "Adicionar Foto" : "Adicionar Foto do Problema"}
+                          {window.innerWidth < 768 ? "Adicionar Foto" : "Adicionar Foto do Problema"}
                         </>
                       )}
                     </Button>
@@ -357,9 +418,9 @@ const Registrar = () => {
                 </div>
               </Card>
 
-              {/* 5. Localização */}
-              <Card className="p-3 sm:p-4 border-border">
-                <div className="space-y-2">
+              {/* 5. Localização - Altura aumentada conforme resolução */}
+              <Card className={`${getCardPadding()} border-border`}>
+                <div className={getSpacing()}>
                   <div className="flex items-start justify-between">
                     <Label className="font-medium text-foreground text-sm sm:text-base">
                       5. Localização *
@@ -376,7 +437,7 @@ const Registrar = () => {
                     variant={localizacao ? "outline" : "default"}
                     size="sm"
                     onClick={handleGoToMap}
-                    className={`w-full h-10 sm:h-12 ${
+                    className={`w-full ${getButtonHeight()} ${
                       localizacao 
                         ? 'border-green-500 bg-green-50 hover:bg-green-100 text-green-700' 
                         : ''
@@ -413,13 +474,13 @@ const Registrar = () => {
                 </div>
               </Card>
 
-              {/* Botão de Envio (parte do fluxo normal) */}
-              <div className="pt-1">
+              {/* Botão de Envio - Altura aumentada conforme resolução */}
+              <div className="pt-2">
                 <Button
                   type="submit"
-                  size={isMobile ? "sm" : "default"}
+                  size={window.innerWidth < 640 ? "sm" : "default"}
                   disabled={criarProblema.isPending || !categoria || !titulo || !descricao || !localizacao}
-                  className="w-full h-10 sm:h-12"
+                  className={`w-full ${getButtonHeight()}`}
                 >
                   {criarProblema.isPending ? (
                     <span className="flex items-center gap-2">
@@ -429,7 +490,7 @@ const Registrar = () => {
                   ) : (
                     <>
                       <Check className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                      {isMobile ? "Enviar" : "Enviar Registro"}
+                      {window.innerWidth < 768 ? "Enviar" : "Enviar Registro"}
                     </>
                   )}
                 </Button>
