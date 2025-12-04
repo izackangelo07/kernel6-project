@@ -81,33 +81,33 @@ const Registrar = () => {
 
   // Funções para obter as alturas baseadas na resolução
   const getInputHeight = () => {
-    if (isLargeTablet) return "h-14"; // 10% maior (iPad Pro)
-    if (isMediumTablet) return "h-12"; // padrão (iPad Air)
-    if (isSmallTablet) return "h-13"; // 5% maior (iPad Mini)
+    if (isLargeTablet) return "h-16"; // 10% maior (iPad Pro)
+    if (isMediumTablet) return "h-15"; // padrão (iPad Air)
+    if (isSmallTablet) return "h-14"; // 5% maior (iPad Mini)
     if (isMobile) return "h-10"; // mobile
     return "h-12"; // desktop padrão
   };
 
   const getTextareaHeight = () => {
-    if (isLargeTablet) return "min-h-[110px]"; // 10% maior
-    if (isMediumTablet) return "min-h-[100px]"; // padrão
-    if (isSmallTablet) return "min-h-[105px]"; // 5% maior
+    if (isLargeTablet) return "min-h-[120px]"; // 10% maior
+    if (isMediumTablet) return "min-h-[115px]"; // padrão
+    if (isSmallTablet) return "min-h-[110px]"; // 5% maior
     if (isMobile) return "min-h-[80px]"; // mobile
     return "min-h-[100px]"; // desktop
   };
 
   const getButtonHeight = () => {
-    if (isLargeTablet) return "h-14"; // 10% maior
-    if (isMediumTablet) return "h-12"; // padrão
-    if (isSmallTablet) return "h-13"; // 5% maior
+    if (isLargeTablet) return "h-16"; // 10% maior
+    if (isMediumTablet) return "h-15"; // padrão
+    if (isSmallTablet) return "h-14"; // 5% maior
     if (isMobile) return "h-10"; // mobile
     return "h-12"; // desktop
   };
 
   const getFotoPreviewHeight = () => {
-    if (isLargeTablet) return "h-44"; // 10% maior
-    if (isMediumTablet) return "h-40"; // padrão
-    if (isSmallTablet) return "h-42"; // 5% maior
+    if (isLargeTablet) return "h-46"; // 10% maior
+    if (isMediumTablet) return "h-45"; // padrão
+    if (isSmallTablet) return "h-44"; // 5% maior
     if (isMobile) return "h-32"; // mobile
     return "h-40"; // desktop
   };
