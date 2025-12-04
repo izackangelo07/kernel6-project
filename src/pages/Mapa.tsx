@@ -9,8 +9,8 @@ import "leaflet/dist/leaflet.css";
 import { useProblemas } from "@/hooks/useProblemas";
 
 // Coordenadas de Recife
-const RECIFE_LAT = -8.0476;
-const RECIFE_LNG = -34.8770;
+const RECIFE_LAT = -8.0301;
+const RECIFE_LNG = -34.9120;
 
 const getCategoriaColor = (categoria: string) => {
   const colorMap: Record<string, string> = {
@@ -263,7 +263,7 @@ const Mapa = () => {
             <span className="hidden sm:inline">Voltar</span>
           </Button>
           <h1 className="text-lg sm:text-2xl md:text-3xl font-semibold text-foreground text-center flex-1">
-            Mapa do Bairro - Recife
+            Mapa
           </h1>
           <div className="w-[60px] sm:w-32" />
         </div>
