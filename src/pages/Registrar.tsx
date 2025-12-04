@@ -81,9 +81,9 @@ const Registrar = () => {
 
   // Funções para obter as alturas baseadas na resolução
   const getInputHeight = () => {
-    if (isLargeTablet) return "h-17"; // 10% maior (iPad Pro)
-    if (isMediumTablet) return "h-15"; // padrão (iPad Air)
-    if (isSmallTablet) return "h-13"; // 5% maior (iPad Mini)
+    if (isLargeTablet) return "h-20"; // 10% maior (iPad Pro)
+    if (isMediumTablet) return "h-16"; // padrão (iPad Air)
+    if (isSmallTablet) return "h-12"; // 5% maior (iPad Mini)
     if (isMobile) return "h-10"; // mobile
     return "h-12"; // desktop padrão
   };
@@ -97,24 +97,24 @@ const Registrar = () => {
   };
 
   const getButtonHeight = () => {
-    if (isLargeTablet) return "h-17"; // 10% maior
-    if (isMediumTablet) return "h-15"; // padrão
-    if (isSmallTablet) return "h-13"; // 5% maior
+    if (isLargeTablet) return "h-20"; // 10% maior
+    if (isMediumTablet) return "h-16"; // padrão
+    if (isSmallTablet) return "h-12"; // 5% maior
     if (isMobile) return "h-10"; // mobile
     return "h-12"; // desktop
   };
 
   const getFotoPreviewHeight = () => {
-    if (isLargeTablet) return "h-47"; // 10% maior
-    if (isMediumTablet) return "h-45"; // padrão
-    if (isSmallTablet) return "h-44"; // 5% maior
+    if (isLargeTablet) return "h-48"; // 10% maior
+    if (isMediumTablet) return "h-44"; // padrão
+    if (isSmallTablet) return "h-40"; // 5% maior
     if (isMobile) return "h-32"; // mobile
     return "h-40"; // desktop
   };
 
   const getCardPadding = () => {
     if (isLargeTablet) return "p-4 sm:p-5"; // 10% maior
-    if (isMediumTablet) return "p-4" sm:p-5"; // padrão
+    if (isMediumTablet) return "p-4 sm:p-5"; // padrão
     if (isSmallTablet) return "p-4 sm:p-5"; // 5% maior
     if (isMobile) return "p-3"; // mobile
     return "p-4 sm:p-6"; // desktop
