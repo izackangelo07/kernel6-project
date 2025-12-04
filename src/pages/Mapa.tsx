@@ -1,17 +1,16 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, MapPin, Check, X, Lightbulb, Trash2, Construction, Trees, School, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useProblemas } from "@/hooks/useProblemas";
 
-// Coordenadas base do bairro (centro aproximado)
-const CENTER_LAT = -23.5505;
-const CENTER_LNG = -46.6333;
+// Coordenadas de Recife
+const RECIFE_LAT = -8.0476;
+const RECIFE_LNG = -34.8770;
 
 const getCategoriaColor = (categoria: string) => {
   const colorMap: Record<string, string> = {
@@ -75,9 +74,37 @@ const getCategoriaIcon = (categoria: string) => {
   return iconMap[categoria] || MapPin;
 };
 
+// Função para fazer reverse geocoding usando Nominatim (OpenStreetMap)
+const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+      {
+        headers: {
+          'Accept-Language': 'pt-BR',
+        }
+      }
+    );
+    const data = await response.json();
+    
+    if (data.display_name) {
+      // Simplificar o endereço
+      const parts = data.display_name.split(',');
+      return parts.slice(0, 3).join(',').trim();
+    }
+    return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+  } catch (error) {
+    console.error("Erro no geocoding:", error);
+    return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+  }
+};
+
 const Mapa = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [address, setAddress] = useState<string>("");
+  const [loadingAddress, setLoadingAddress] = useState(false);
   const { data: problemas = [], isLoading } = useProblemas();
 
   const mapRef = useRef<L.Map | null>(null);
@@ -85,13 +112,23 @@ const Mapa = () => {
   const newLocationMarkerRef = useRef<L.Marker | null>(null);
   const problemMarkersRef = useRef<L.Marker[]>([]);
 
+  // Pegar parâmetros de URL para centralizar em um problema específico
+  const focusLat = searchParams.get('lat');
+  const focusLng = searchParams.get('lng');
+  const focusId = searchParams.get('id');
+
   useEffect(() => {
     if (mapRef.current || !mapContainerRef.current) return;
 
-    // Inicializa o mapa Leaflet
+    // Determinar centro inicial
+    const initialLat = focusLat ? parseFloat(focusLat) : RECIFE_LAT;
+    const initialLng = focusLng ? parseFloat(focusLng) : RECIFE_LNG;
+    const initialZoom = focusLat && focusLng ? 18 : 14;
+
+    // Inicializa o mapa Leaflet centralizado em Recife
     const map = L.map(mapContainerRef.current, {
-      center: [CENTER_LAT, CENTER_LNG],
-      zoom: 16,
+      center: [initialLat, initialLng],
+      zoom: initialZoom,
       zoomControl: true,
     });
 
@@ -104,9 +141,10 @@ const Mapa = () => {
 
 
     // Clique no mapa para selecionar nova localização
-    map.on("click", (e: L.LeafletMouseEvent) => {
+    map.on("click", async (e: L.LeafletMouseEvent) => {
       const { lat, lng } = e.latlng;
       setSelectedLocation({ lat, lng });
+      setLoadingAddress(true);
 
       if (newLocationMarkerRef.current) {
         map.removeLayer(newLocationMarkerRef.current);
@@ -115,10 +153,16 @@ const Mapa = () => {
       const marker = L.marker([lat, lng], { icon: newLocationIcon }).addTo(map);
       newLocationMarkerRef.current = marker;
 
+      // Fazer reverse geocoding para obter endereço
+      const endereco = await reverseGeocode(lat, lng);
+      setAddress(endereco);
+      setLoadingAddress(false);
+
       marker.bindPopup(
-        `<div style="padding: 4px 2px; text-align: center; max-width: 220px;">
-          <p style="font-weight: 600; font-size: 13px; margin-bottom: 2px;">Nova Localização</p>
-          <p style="font-size: 11px; color: #4b5563;">Clique em \"Confirmar\" para continuar</p>
+        `<div style="padding: 4px 2px; text-align: center; max-width: 250px;">
+          <p style="font-weight: 600; font-size: 13px; margin-bottom: 4px;">📍 Nova Localização</p>
+          <p style="font-size: 11px; color: #4b5563; margin-bottom: 4px;">${endereco}</p>
+          <p style="font-size: 10px; color: #9ca3af;">Clique em "Confirmar" para continuar</p>
         </div>`
       );
       marker.openPopup();
@@ -130,7 +174,7 @@ const Mapa = () => {
       map.remove();
       mapRef.current = null;
     };
-  }, []);
+  }, [focusLat, focusLng]);
 
   // Adicionar marcadores dos problemas quando os dados forem carregados
   useEffect(() => {
@@ -165,24 +209,43 @@ const Mapa = () => {
 
       marker.bindPopup(popupContent);
 
+      // Se este é o problema focado, abrir popup
+      if (focusId && problema.id === focusId) {
+        marker.openPopup();
+      }
+
       marker.on("mouseover", function () {
         this.openPopup();
       });
       marker.on("mouseout", function () {
-        this.closePopup();
+        if (focusId !== problema.id) {
+          this.closePopup();
+        }
       });
 
       problemMarkersRef.current.push(marker);
     });
-  }, [problemas, isLoading]);
+  }, [problemas, isLoading, focusId]);
 
   const handleConfirm = () => {
     if (selectedLocation) {
-      sessionStorage.setItem("localizacaoProblema", JSON.stringify(selectedLocation));
+      sessionStorage.setItem("localizacaoProblema", JSON.stringify({
+        ...selectedLocation,
+        endereco: address
+      }));
       navigate("/registrar");
     } else {
       toast.error("Por favor, marque um local no mapa");
     }
+  };
+
+  const handleCancel = () => {
+    if (newLocationMarkerRef.current && mapRef.current) {
+      mapRef.current.removeLayer(newLocationMarkerRef.current);
+      newLocationMarkerRef.current = null;
+    }
+    setSelectedLocation(null);
+    setAddress("");
   };
 
   return (
@@ -193,14 +256,14 @@ const Mapa = () => {
           <Button
             variant="ghost"
             size="default"
-            onClick={() => navigate("/registrar")}
+            onClick={() => navigate(-1)}
             className="min-h-[44px]"
           >
             <ArrowLeft className="h-5 w-5 sm:mr-2" />
             <span className="hidden sm:inline">Voltar</span>
           </Button>
           <h1 className="text-lg sm:text-2xl md:text-3xl font-semibold text-foreground text-center flex-1">
-            Mapa do Bairro
+            Mapa do Bairro - Recife
           </h1>
           <div className="w-[60px] sm:w-32" />
         </div>
@@ -220,12 +283,29 @@ const Mapa = () => {
               <div ref={mapContainerRef} className="w-full h-full" />
             </div>
 
+            {/* Selected Location Info */}
+            {selectedLocation && (
+              <Card className="p-4 bg-primary/5 border-primary/20">
+                <div className="flex items-start gap-3">
+                  <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm sm:text-base text-foreground">Localização selecionada</p>
+                    {loadingAddress ? (
+                      <p className="text-xs sm:text-sm text-muted-foreground">Buscando endereço...</p>
+                    ) : (
+                      <p className="text-xs sm:text-sm text-muted-foreground break-words">{address}</p>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            )}
+
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Button
                 variant="outline"
                 size="lg"
-                onClick={() => setSelectedLocation(null)}
+                onClick={handleCancel}
                 className="flex-1 border-2 min-h-[52px]"
                 disabled={!selectedLocation}
               >
@@ -273,7 +353,6 @@ const Mapa = () => {
                 })}
               </div>
             </Card>
-
 
             {/* Instructions Card */}
             <Card className="p-4 sm:p-6 bg-primary/5 border-primary/20">
