@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, MapPin, Check, X, Lightbulb, Trash2, Construction, Trees, School, Shield, Search, Locate, ZoomIn } from "lucide-react";
+import { ArrowLeft, MapPin, Check, X, Lightbulb, Trash2, Construction, Trees, School, Shield, Search, Locate } from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -184,14 +184,6 @@ const Mapa = () => {
     debouncedSearch(searchQuery);
     return () => debouncedSearch.cancel();
   }, [searchQuery, debouncedSearch]);
-
-  // Função para centralizar em Recife
-  const centerOnRecife = () => {
-    if (mapRef.current) {
-      mapRef.current.setView([RECIFE_LAT, RECIFE_LNG], isMobile ? 13 : 14);
-      toast.success("Mapa centralizado em Recife");
-    }
-  };
 
   // Função para localizar usuário
   const locateUser = () => {
@@ -566,30 +558,6 @@ const Mapa = () => {
                 'h-[65vh]'
               }`}
             />
-            
-            {/* Controles customizados para mobile */}
-            {isMobile && (
-              <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-[1000]">
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  className="h-10 w-10 p-0 rounded-full shadow-lg"
-                  onClick={centerOnRecife}
-                  title="Centralizar em Recife"
-                >
-                  <ZoomIn className="h-5 w-5" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  className="h-10 w-10 p-0 rounded-full shadow-lg"
-                  onClick={locateUser}
-                  title="Minha localização"
-                >
-                  <Locate className="h-5 w-5" />
-                </Button>
-              </div>
-            )}
           </div>
 
           {/* 🔍 Barra de Pesquisa ABAIXO DO MAPA */}
