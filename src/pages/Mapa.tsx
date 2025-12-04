@@ -123,7 +123,7 @@ const Mapa = () => {
     // Determinar centro inicial
     const initialLat = focusLat ? parseFloat(focusLat) : RECIFE_LAT;
     const initialLng = focusLng ? parseFloat(focusLng) : RECIFE_LNG;
-    const initialZoom = focusLat && focusLng ? 18 : 14;
+    const initialZoom = focusLat && focusLng ? 10 : 12;
 
     // Inicializa o mapa Leaflet centralizado em Recife
     const map = L.map(mapContainerRef.current, {
