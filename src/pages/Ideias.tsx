@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Lightbulb, Trash2, Construction, Trees, School, Shield, HelpCircle, MapPin, Plus, Search, Pencil, Filter, X } from "lucide-react";
+import { ArrowLeft, Lightbulb, Trash2, Construction, Trees, School, Shield, HelpCircle, MapPin, Plus, Search, Pencil, X } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -15,11 +15,9 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useProblemas, useAtualizarProblema, useExcluirProblema, Problema } from "@/hooks/useProblemas";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { useResponsive } from "@/hooks/useResponsive";
 
 const getCategoriaIcon = (categoria: string) => {
   const iconMap: Record<string, any> = {
@@ -70,12 +68,10 @@ const Ideias = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { isAdmin } = useAuth();
-  const { isMobile, isTablet, isDesktop } = useResponsive();
   
   const [busca, setBusca] = useState("");
   const [filtroCategoria, setFiltroCategoria] = useState<string>("todas");
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
-  const [showFilters, setShowFilters] = useState(false);
   
   const { data: problemas = [], isLoading } = useProblemas();
   const atualizarProblema = useAtualizarProblema();
@@ -158,91 +154,7 @@ const Ideias = () => {
     setBusca("");
     setFiltroCategoria("todas");
     setFiltroStatus("todos");
-    if (isMobile || isTablet) {
-      setShowFilters(false);
-    }
   };
-
-  const FilterContent = () => (
-    <div className="space-y-4">
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          type="text"
-          placeholder="Buscar problemas..."
-          value={busca}
-          onChange={(e) => setBusca(e.target.value)}
-          className="pl-10 pr-10 py-4"
-        />
-        {busca && (
-          <button
-            onClick={() => setBusca("")}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        )}
-      </div>
-
-      {/* Filter Dropdowns */}
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">Categoria</Label>
-          <Select value={filtroCategoria} onValueChange={setFiltroCategoria}>
-            <SelectTrigger>
-              <SelectValue placeholder="Todas as categorias" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todas">Todas as categorias</SelectItem>
-              {categorias.map((cat) => (
-                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">Status</Label>
-          <Select value={filtroStatus} onValueChange={setFiltroStatus}>
-            <SelectTrigger>
-              <SelectValue placeholder="Todos os status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos os status</SelectItem>
-              {statusOptions.map((status) => (
-                <SelectItem key={status} value={status}>{getStatusLabel(status)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Active filters and clear button */}
-      <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
-        <div className="flex flex-wrap gap-2">
-          {filtroCategoria !== "todas" && (
-            <Badge variant="secondary" className="text-xs">
-              {filtroCategoria}
-            </Badge>
-          )}
-          {filtroStatus !== "todos" && (
-            <Badge variant="secondary" className="text-xs">
-              {getStatusLabel(filtroStatus)}
-            </Badge>
-          )}
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={clearFilters}
-          className="text-xs h-8"
-        >
-          Limpar filtros
-        </Button>
-      </div>
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -251,9 +163,9 @@ const Ideias = () => {
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
           <Button
             variant="ghost"
-            size={isMobile ? "sm" : "default"}
+            size="sm"
             onClick={() => navigate("/")}
-            className="min-h-[40px] sm:min-h-[44px]"
+            className="min-h-[40px]"
           >
             <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 sm:mr-2" />
             <span className="hidden sm:inline">Voltar</span>
@@ -263,53 +175,72 @@ const Ideias = () => {
             Problemas Reportados
           </h1>
           
-          {/* Botão de filtros para mobile/tablet */}
-          {(isMobile || isTablet) ? (
-            <Sheet open={showFilters} onOpenChange={setShowFilters}>
-              <SheetTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="min-h-[40px]"
-                >
-                  <Filter className="h-4 w-4" />
-                  <span className="sr-only sm:not-sr-only sm:ml-2">Filtros</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-full sm:w-80">
-                <SheetHeader className="mb-6">
-                  <SheetTitle>Filtrar Problemas</SheetTitle>
-                </SheetHeader>
-                <FilterContent />
-              </SheetContent>
-            </Sheet>
-          ) : (
-            <div className="w-20" />
-          )}
+          <div className="w-12" />
         </div>
       </header>
 
       {/* Main Content */}
       <main className="flex-1 px-3 sm:px-6 md:px-8 py-3 sm:py-4 md:py-6">
         <div className="max-w-7xl mx-auto h-full flex flex-col gap-4 sm:gap-6">
-          {/* 🔍 Barra de Pesquisa e Filtros (Desktop) */}
-          {isDesktop && (
-            <Card className="p-4 sm:p-6 border-border">
-              <FilterContent />
-            </Card>
-          )}
+          {/* 🔍 Barra de Pesquisa e Filtros (IGUAL EM TODOS OS DISPOSITIVOS) */}
+          <Card className="p-4 sm:p-6 border-border">
+            <div className="space-y-4">
+              {/* Search Bar */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Buscar problemas por título ou descrição..."
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  className="pl-10 pr-10 py-3 sm:py-4 text-sm sm:text-base"
+                />
+                {busca && (
+                  <button
+                    onClick={() => setBusca("")}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
 
-          {/* 📊 Contador de Resultados e Filtros Ativos */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="flex-1">
-              <p className="text-sm text-muted-foreground">
-                Mostrando <span className="font-semibold text-foreground">{problemasFiltrados.length}</span> de{" "}
-                <span className="font-semibold text-foreground">{problemas.length}</span> problemas
-              </p>
-              
-              {/* Filtros ativos (mobile/tablet) */}
-              {(isMobile || isTablet) && (
-                <div className="flex flex-wrap gap-2 mt-2">
+              {/* Filter Dropdowns - Layout responsivo mas sempre visível */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Categoria</Label>
+                  <Select value={filtroCategoria} onValueChange={setFiltroCategoria}>
+                    <SelectTrigger className="text-sm sm:text-base">
+                      <SelectValue placeholder="Todas as categorias" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todas">Todas as categorias</SelectItem>
+                      {categorias.map((cat) => (
+                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Status</Label>
+                  <Select value={filtroStatus} onValueChange={setFiltroStatus}>
+                    <SelectTrigger className="text-sm sm:text-base">
+                      <SelectValue placeholder="Todos os status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todos">Todos os status</SelectItem>
+                      {statusOptions.map((status) => (
+                        <SelectItem key={status} value={status}>{getStatusLabel(status)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Active filters and clear button */}
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+                <div className="flex flex-wrap gap-2">
                   {filtroCategoria !== "todas" && (
                     <Badge variant="secondary" className="text-xs">
                       {filtroCategoria}
@@ -320,37 +251,25 @@ const Ideias = () => {
                       {getStatusLabel(filtroStatus)}
                     </Badge>
                   )}
-                  {(filtroCategoria !== "todas" || filtroStatus !== "todos") && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={clearFilters}
-                      className="text-xs h-6 px-2"
-                    >
-                      Limpar
-                    </Button>
-                  )}
                 </div>
-              )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="text-xs h-8"
+                >
+                  Limpar filtros
+                </Button>
+              </div>
             </div>
+          </Card>
 
-            {/* Botão de filtros (mobile/tablet) visível apenas quando há filtros ativos */}
-            {(isMobile || isTablet) && (filtroCategoria !== "todas" || filtroStatus !== "todos" || busca) && (
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-9">
-                    <Filter className="h-3 w-3 mr-2" />
-                    Filtros
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-full sm:w-80">
-                  <SheetHeader className="mb-6">
-                    <SheetTitle>Filtrar Problemas</SheetTitle>
-                  </SheetHeader>
-                  <FilterContent />
-                </SheetContent>
-              </Sheet>
-            )}
+          {/* 📊 Contador de Resultados */}
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Mostrando <span className="font-semibold text-foreground">{problemasFiltrados.length}</span> de{" "}
+              <span className="font-semibold text-foreground">{problemas.length}</span> problemas
+            </p>
           </div>
 
           {/* 📋 Lista de Problemas */}
@@ -386,8 +305,7 @@ const Ideias = () => {
                 return (
                   <Card 
                     key={problema.id} 
-                    className="p-4 sm:p-6 hover:shadow-md transition-shadow cursor-pointer"
-                    onClick={() => !isDesktop && handleViewOnMap(problema)}
+                    className="p-4 sm:p-6 hover:shadow-md transition-shadow"
                   >
                     <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
                       {/* Ícone da Categoria */}
@@ -418,19 +336,16 @@ const Ideias = () => {
                             {problema.categoria}
                           </Badge>
                           <span className="text-xs text-muted-foreground">
-                            • {new Date(problema.data_criacao).toLocaleDateString('pt-BR')}
+                            • {new Date(problema.created_at).toLocaleDateString('pt-BR')}
                           </span>
                         </div>
 
-                        {/* Botões de Ação (sempre visíveis para admin, condicionais para usuários) */}
-                        <div className={`flex flex-wrap gap-2 pt-2 ${isMobile ? 'justify-between' : ''}`}>
+                        {/* Botões de Ação */}
+                        <div className="flex flex-wrap gap-2 pt-2">
                           <Button
                             variant="outline"
-                            size={isMobile ? "sm" : "default"}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleViewOnMap(problema);
-                            }}
+                            size="sm"
+                            onClick={() => handleViewOnMap(problema)}
                             className="flex-1 sm:flex-none min-w-[120px]"
                           >
                             <MapPin className="mr-2 h-4 w-4" />
@@ -441,11 +356,8 @@ const Ideias = () => {
                             <>
                               <Button
                                 variant="outline"
-                                size={isMobile ? "sm" : "default"}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEdit(problema);
-                                }}
+                                size="sm"
+                                onClick={() => handleEdit(problema)}
                                 className="flex-1 sm:flex-none min-w-[120px] text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                               >
                                 <Pencil className="mr-2 h-4 w-4" />
@@ -453,11 +365,8 @@ const Ideias = () => {
                               </Button>
                               <Button
                                 variant="outline"
-                                size={isMobile ? "sm" : "default"}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteClick(problema.id);
-                                }}
+                                size="sm"
+                                onClick={() => handleDeleteClick(problema.id)}
                                 className="flex-1 sm:flex-none min-w-[120px] text-red-600 hover:text-red-700 hover:bg-red-50"
                               >
                                 <Trash2 className="mr-2 h-4 w-4" />
@@ -473,15 +382,6 @@ const Ideias = () => {
               })
             )}
           </div>
-
-          {/* 📝 Dica para mobile */}
-          {isMobile && problemasFiltrados.length > 0 && (
-            <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
-              <p className="text-xs text-blue-700 dark:text-blue-300 text-center">
-                💡 <strong>Toque em um problema</strong> para ver sua localização no mapa
-              </p>
-            </div>
-          )}
         </div>
       </main>
 
@@ -489,7 +389,7 @@ const Ideias = () => {
       <footer className="sticky bottom-0 left-0 right-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-3 sm:py-4">
         <div className="max-w-7xl mx-auto">
           <Button
-            size={isMobile ? "default" : "lg"}
+            size="lg"
             onClick={() => navigate("/registrar")}
             className="w-full min-h-[48px] sm:min-h-[56px]"
           >
@@ -501,7 +401,7 @@ const Ideias = () => {
 
       {/* ✏️ Modal de Edição */}
       <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
-        <DialogContent className={`${isMobile ? 'max-w-[95vw] mx-2' : 'max-w-lg'}`}>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Editar Problema</DialogTitle>
             <DialogDescription>
@@ -571,7 +471,7 @@ const Ideias = () => {
 
       {/* 🗑️ Modal de Confirmação de Exclusão */}
       <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
-        <DialogContent className={`${isMobile ? 'max-w-[95vw] mx-2' : 'max-w-md'}`}>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Confirmar Exclusão</DialogTitle>
             <DialogDescription>
