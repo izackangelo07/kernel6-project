@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, MapPin, Check, X, Lightbulb, Trash2, Construction, Trees, School, Shield, Search, Menu, ZoomIn, ZoomOut, Locate, Maximize, Minimize } from "lucide-react";
+import { ArrowLeft, MapPin, Check, X, Lightbulb, Trash2, Construction, Trees, School, Shield, Search, Menu, ZoomIn, ZoomOut, Locate, Maximize, Minimize, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { useProblemas } from "@/hooks/useProblemas";
 import { debounce } from "lodash";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Drawer, DrawerContent, DrawerTrigger, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 // Coordenadas de Recife
 const RECIFE_LAT = -8.0301;
@@ -175,6 +176,7 @@ const Mapa = () => {
   const [showResults, setShowResults] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
 
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -253,6 +255,14 @@ const Mapa = () => {
         mapRef.current.removeLayer(searchMarkerRef.current);
       }
       
+      // Limpar marcador de nova localização se existir
+      if (newLocationMarkerRef.current) {
+        mapRef.current.removeLayer(newLocationMarkerRef.current);
+        newLocationMarkerRef.current = null;
+        setSelectedLocation(null);
+        setAddress("");
+      }
+      
       const marker = L.marker([lat, lng], {
         icon: L.divIcon({
           className: 'search-marker',
@@ -264,16 +274,23 @@ const Mapa = () => {
       
       searchMarkerRef.current = marker;
       
+      // Fazer reverse geocoding para obter endereço completo
+      setLoadingAddress(true);
+      const enderecoCompleto = await reverseGeocode(lat, lng);
+      setAddress(enderecoCompleto);
+      setSelectedLocation({ lat, lng });
+      setLoadingAddress(false);
+      
       const popupContent = `
         <div style="padding: ${isMobile ? '6px' : '8px'}; max-width: ${isMobile ? '200px' : '250px'};">
           <p style="font-weight: 600; font-size: ${isMobile ? '12px' : '14px'}; margin-bottom: 4px; color: #3b82f6;">
-            📍 ${result.display_name.split(',')[0]}
+            📍 Localização Encontrada
           </p>
-          <p style="font-size: ${isMobile ? '11px' : '12px'}; color: #4b5563;">
-            ${result.display_name.split(',').slice(1, 3).join(',').trim()}
+          <p style="font-size: ${isMobile ? '11px' : '12px'}; color: #4b5563; margin-bottom: 4px;">
+            ${result.display_name.split(',')[0]}
           </p>
-          <p style="font-size: ${isMobile ? '10px' : '11px'}; color: #9ca3af; margin-top: 4px;">
-            Clique no mapa para selecionar
+          <p style="font-size: ${isMobile ? '10px' : '11px'}; color: #9ca3af;">
+            Clique em "Confirmar" para usar este local
           </p>
         </div>
       `;
@@ -284,7 +301,12 @@ const Mapa = () => {
       setSearchResults([]);
       setShowResults(false);
       
-      toast.success("Localização encontrada!");
+      // Em mobile, recolher a barra de pesquisa após seleção
+      if (isMobile) {
+        setIsSearchExpanded(false);
+      }
+      
+      toast.success("Localização encontrada e selecionada!");
     }
   };
 
@@ -339,12 +361,12 @@ const Mapa = () => {
     const map = L.map(mapContainerRef.current, {
       center: [initialLat, initialLng],
       zoom: initialZoom,
-      zoomControl: false, // Vamos adicionar controles customizados
+      zoomControl: false,
       attributionControl: true,
-      dragging: !isMobile, // Melhor experiência em mobile
-      tap: isMobile, // Suporte a toque
+      dragging: !isMobile,
+      tap: isMobile,
       touchZoom: isMobile,
-      scrollWheelZoom: !isMobile, // Desabilita zoom com scroll no mobile
+      scrollWheelZoom: !isMobile,
     });
 
     mapRef.current = map;
@@ -367,6 +389,7 @@ const Mapa = () => {
       setSelectedLocation({ lat, lng });
       setLoadingAddress(true);
 
+      // Limpar marcadores anteriores
       if (searchMarkerRef.current) {
         map.removeLayer(searchMarkerRef.current);
         searchMarkerRef.current = null;
@@ -507,14 +530,22 @@ const Mapa = () => {
       mapRef.current.removeLayer(newLocationMarkerRef.current);
       newLocationMarkerRef.current = null;
     }
+    
+    if (searchMarkerRef.current && mapRef.current) {
+      mapRef.current.removeLayer(searchMarkerRef.current);
+      searchMarkerRef.current = null;
+    }
+    
     setSelectedLocation(null);
     setAddress("");
   };
 
   // Efeito para fechar resultados quando clicar fora
   useEffect(() => {
-    const handleClickOutside = () => {
-      setShowResults(false);
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!(e.target as Element).closest('.search-container')) {
+        setShowResults(false);
+      }
     };
 
     document.addEventListener('click', handleClickOutside);
@@ -605,7 +636,7 @@ const Mapa = () => {
               </SheetContent>
             </Sheet>
           ) : (
-            <div className="w-24" /> // Espaçamento para desktop
+            <div className="w-24" />
           )}
         </div>
       </header>
@@ -613,97 +644,12 @@ const Mapa = () => {
       {/* Main Content */}
       <main className="flex-1 px-3 sm:px-6 md:px-8 py-3 sm:py-4 md:py-6">
         <div className="max-w-7xl mx-auto h-full flex flex-col gap-4 sm:gap-6">
-          
-        {/* 🌍 Container do Mapa com Controles */}
+          {/* 🌍 Container do Mapa com Controles */}
           <div className="relative w-full rounded-lg sm:rounded-xl overflow-hidden shadow-lg border border-border">
             <div 
               ref={mapContainerRef} 
-              className="w-full h-[60vh] sm:h-[65vh] md:h-[70vh]"
+              className="w-full h-[55vh] sm:h-[60vh] md:h-[65vh]"
             />
-        
-        {/* 🔍 Barra de Pesquisa */}
-          <div className="relative w-full">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder={isMobile ? "Buscar endereço..." : "Digite um endereço para buscar (mínimo 3 caracteres)..."}
-                className="w-full pl-10 pr-10 py-4 sm:py-5 rounded-lg sm:rounded-xl border border-border text-sm shadow-sm"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setShowResults(true);
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (searchResults.length > 0) {
-                    setShowResults(true);
-                  }
-                }}
-              />
-              {searchQuery && (
-                <button
-                  onClick={handleClearSearch}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-
-            {/* Dropdown de resultados */}
-            {showResults && (searchResults.length > 0 || isSearching) && (
-              <div 
-                className="absolute z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {isSearching ? (
-                  <div className="p-4 text-center text-sm text-muted-foreground">
-                    Buscando...
-                  </div>
-                ) : (
-                  <>
-                    {searchResults.map((result, index) => (
-                      <button
-                        key={`${result.lat}-${result.lon}-${index}`}
-                        className="w-full text-left p-3 hover:bg-accent transition-colors border-b border-border last:border-b-0"
-                        onClick={() => handleSelectResult(result)}
-                      >
-                        <div className="flex items-start gap-2">
-                          <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm text-foreground truncate">
-                              {result.display_name.split(',')[0]}
-                            </p>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {result.display_name.split(',').slice(1, 3).join(',').trim()}
-                            </p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded-full">
-                                {result.type}
-                              </span>
-                              {!isMobile && (
-                                <span className="text-xs text-muted-foreground">
-                                  Relevância: {(result.importance * 100).toFixed(0)}%
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                    {!isMobile && (
-                      <div className="p-2 border-t border-border text-center">
-                        <p className="text-xs text-muted-foreground">
-                          Dados fornecidos por OpenStreetMap
-                        </p>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
-          </div>
             
             {/* Controles customizados para mobile */}
             {isMobile && (
@@ -743,20 +689,218 @@ const Mapa = () => {
             )}
           </div>
 
-          {/* 📍 Info da Localização */}
+          {/* 🔍 Barra de Pesquisa ABAIXO DO MAPA */}
+          <div className="search-container">
+            {isMobile ? (
+              // Versão mobile com Collapsible
+              <Collapsible
+                open={isSearchExpanded}
+                onOpenChange={setIsSearchExpanded}
+                className="w-full"
+              >
+                <div className="flex items-center gap-2">
+                  <CollapsibleTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="flex-1 justify-between"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Search className="h-4 w-4" />
+                        <span className="text-sm">
+                          {searchQuery ? `"${searchQuery.substring(0, 20)}${searchQuery.length > 20 ? '...' : ''}"` : "Buscar endereço"}
+                        </span>
+                      </div>
+                      {isSearchExpanded ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </CollapsibleTrigger>
+                  
+                  {searchQuery && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleClearSearch}
+                      className="h-10 w-10 p-0"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                
+                <CollapsibleContent className="mt-2">
+                  <div className="relative">
+                    <Input
+                      type="text"
+                      placeholder="Digite um endereço..."
+                      className="w-full pl-10 pr-10 py-4 rounded-lg border border-border text-sm"
+                      value={searchQuery}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setShowResults(true);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      autoFocus
+                    />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    
+                    {/* Dropdown de resultados mobile */}
+                    {showResults && (searchResults.length > 0 || isSearching) && (
+                      <div 
+                        className="absolute z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {isSearching ? (
+                          <div className="p-4 text-center text-sm text-muted-foreground">
+                            Buscando...
+                          </div>
+                        ) : (
+                          searchResults.map((result, index) => (
+                            <button
+                              key={`${result.lat}-${result.lon}-${index}`}
+                              className="w-full text-left p-3 hover:bg-accent transition-colors border-b border-border last:border-b-0"
+                              onClick={() => handleSelectResult(result)}
+                            >
+                              <div className="flex items-start gap-2">
+                                <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-sm text-foreground truncate">
+                                    {result.display_name.split(',')[0]}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground truncate">
+                                    {result.display_name.split(',').slice(1, 3).join(',').trim()}
+                                  </p>
+                                </div>
+                              </div>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            ) : (
+              // Versão desktop/tablet
+              <div className="relative">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Digite um endereço para buscar (mínimo 3 caracteres)..."
+                    className="w-full pl-10 pr-10 py-4 sm:py-5 rounded-lg sm:rounded-xl border border-border text-sm shadow-sm"
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setShowResults(true);
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (searchResults.length > 0) {
+                        setShowResults(true);
+                      }
+                    }}
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={handleClearSearch}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Dropdown de resultados */}
+                {showResults && (searchResults.length > 0 || isSearching) && (
+                  <div 
+                    className="absolute z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {isSearching ? (
+                      <div className="p-4 text-center text-sm text-muted-foreground">
+                        Buscando...
+                      </div>
+                    ) : (
+                      <>
+                        {searchResults.map((result, index) => (
+                          <button
+                            key={`${result.lat}-${result.lon}-${index}`}
+                            className="w-full text-left p-3 hover:bg-accent transition-colors border-b border-border last:border-b-0"
+                            onClick={() => handleSelectResult(result)}
+                          >
+                            <div className="flex items-start gap-2">
+                              <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm text-foreground truncate">
+                                  {result.display_name.split(',')[0]}
+                                </p>
+                                <p className="text-xs text-muted-foreground truncate">
+                                  {result.display_name.split(',').slice(1, 3).join(',').trim()}
+                                </p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded-full">
+                                    {result.type}
+                                  </span>
+                                  {!isMobile && (
+                                    <span className="text-xs text-muted-foreground">
+                                      Relevância: {(result.importance * 100).toFixed(0)}%
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                        <div className="p-2 border-t border-border text-center">
+                          <p className="text-xs text-muted-foreground">
+                            Dados fornecidos por OpenStreetMap
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* 📍 Info da Localização Selecionada */}
           {selectedLocation && (
             <Card className="p-3 sm:p-4 bg-primary/5 border-primary/20">
               <div className="flex items-start gap-3">
                 <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm text-foreground">
-                    Localização selecionada
-                  </p>
-                  {loadingAddress ? (
-                    <p className="text-xs text-muted-foreground mt-1">Buscando endereço...</p>
-                  ) : (
-                    <p className="text-xs text-muted-foreground mt-1 break-words">{address}</p>
-                  )}
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-medium text-sm text-foreground">
+                        Localização selecionada
+                      </p>
+                      {loadingAddress ? (
+                        <p className="text-xs text-muted-foreground mt-1">Buscando endereço...</p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground mt-1 break-words">{address}</p>
+                      )}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleCancel}
+                      className="h-8 w-8 p-0"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex gap-2 mt-3">
+                    <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full">
+                      Latitude: {selectedLocation.lat.toFixed(6)}
+                    </span>
+                    <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full">
+                      Longitude: {selectedLocation.lng.toFixed(6)}
+                    </span>
+                  </div>
                 </div>
               </div>
             </Card>
@@ -794,9 +938,9 @@ const Mapa = () => {
           )}
 
           {/* Dicas para mobile */}
-          {isMobile && (
-            <div className="bg-muted/50 p-3 rounded-lg">
-              <p className="text-xs text-muted-foreground text-center">
+          {isMobile && !selectedLocation && (
+            <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+              <p className="text-xs text-blue-700 dark:text-blue-300 text-center">
                 💡 <strong>Dica:</strong> Toque no mapa para marcar um local ou use a busca acima.
               </p>
             </div>
