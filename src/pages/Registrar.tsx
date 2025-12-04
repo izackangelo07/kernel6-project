@@ -174,7 +174,7 @@ const Registrar = () => {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header - Mais compacto em tablet */}
       <header className={`border-b border-border bg-card px-4 sm:px-6 py-3 ${isTablet ? 'py-2' : 'sm:py-4'}`}>
-        <div className="max-w-4xl mx-auto flex items-center justify-between gap-2">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
           <Button
             variant="ghost"
             size={isMobile ? "sm" : isTablet ? "sm" : "default"}
@@ -197,7 +197,7 @@ const Registrar = () => {
       <main className={`flex-1 px-4 sm:px-6 py-3 ${
         isTablet ? 'py-2' : 'sm:py-4'
       } overflow-y-auto`}>
-        <form onSubmit={handleSubmit} className="max-w-2xl mx-auto">
+        <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
           {/* Container principal ajustado para tablet */}
           <div className={`space-y-4 ${
             isTablet ? 'space-y-3' : 'sm:space-y-6'
