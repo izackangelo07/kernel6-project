@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Lightbulb, Trash2, Construction, Trees, School, Shield, HelpCircle, MapPin, Plus, Search, Pencil } from "lucide-react";
+import { ArrowLeft, Lightbulb, Trash2, Construction, Trees, School, Shield, HelpCircle, MapPin, Plus, Search, Pencil, Filter, X } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -12,12 +12,14 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useProblemas, useAtualizarProblema, useExcluirProblema, Problema } from "@/hooks/useProblemas";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useResponsive } from "@/hooks/useResponsive";
 
 const getCategoriaIcon = (categoria: string) => {
   const iconMap: Record<string, any> = {
@@ -34,12 +36,12 @@ const getCategoriaIcon = (categoria: string) => {
 
 const getStatusColor = (status: string) => {
   const colorMap: Record<string, string> = {
-    "pendente": "bg-yellow-100 text-yellow-800 border-yellow-300",
-    "em_analise": "bg-blue-100 text-blue-800 border-blue-300",
-    "aprovado": "bg-green-100 text-green-800 border-green-300",
-    "rejeitado": "bg-red-100 text-red-800 border-red-300",
+    "pendente": "bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900 dark:text-yellow-300",
+    "em_analise": "bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900 dark:text-blue-300",
+    "aprovado": "bg-green-100 text-green-800 border-green-300 dark:bg-green-900 dark:text-green-300",
+    "rejeitado": "bg-red-100 text-red-800 border-red-300 dark:bg-red-900 dark:text-red-300",
   };
-  return colorMap[status] || "bg-gray-100 text-gray-800 border-gray-300";
+  return colorMap[status] || "bg-gray-100 text-gray-800 border-gray-300 dark:bg-gray-800 dark:text-gray-300";
 };
 
 const getStatusLabel = (status: string) => {
@@ -68,9 +70,13 @@ const Ideias = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { isAdmin } = useAuth();
+  const { isMobile, isTablet, isDesktop } = useResponsive();
+  
   const [busca, setBusca] = useState("");
   const [filtroCategoria, setFiltroCategoria] = useState<string>("todas");
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
+  const [showFilters, setShowFilters] = useState(false);
+  
   const { data: problemas = [], isLoading } = useProblemas();
   const atualizarProblema = useAtualizarProblema();
   const excluirProblema = useExcluirProblema();
@@ -148,208 +154,361 @@ const Ideias = () => {
     navigate(`/mapa?lat=${problema.latitude}&lng=${problema.longitude}&id=${problema.id}`);
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card px-4 sm:px-8 md:px-12 py-4 sm:py-6 sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-2">
-          <Button
-            variant="ghost"
-            size="default"
-            onClick={() => navigate("/")}
-            className="min-h-[44px]"
+  const clearFilters = () => {
+    setBusca("");
+    setFiltroCategoria("todas");
+    setFiltroStatus("todos");
+    if (isMobile || isTablet) {
+      setShowFilters(false);
+    }
+  };
+
+  const FilterContent = () => (
+    <div className="space-y-4">
+      {/* Search Bar */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="text"
+          placeholder="Buscar problemas..."
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          className="pl-10 pr-10 py-4"
+        />
+        {busca && (
+          <button
+            onClick={() => setBusca("")}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
-            <ArrowLeft className="h-5 w-5 sm:mr-2" />
-            <span className="hidden sm:inline">Voltar</span>
-          </Button>
-          <h1 className="text-lg sm:text-2xl md:text-3xl font-semibold text-foreground text-center flex-1">
-            Problemas Reportados
-          </h1>
-          <div className="w-[60px] sm:w-32" />
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+
+      {/* Filter Dropdowns */}
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Categoria</Label>
+          <Select value={filtroCategoria} onValueChange={setFiltroCategoria}>
+            <SelectTrigger>
+              <SelectValue placeholder="Todas as categorias" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas as categorias</SelectItem>
+              {categorias.map((cat) => (
+                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-      </header>
 
-      {/* Filters Section */}
-      <div className="px-4 sm:px-8 md:px-12 py-4 sm:py-6 md:py-8 border-b border-border bg-card/50">
-        <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Digite para buscar..."
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              className="h-12 sm:h-14 pl-10 sm:pl-12 text-base sm:text-lg bg-background border-2 min-h-[48px]"
-            />
-          </div>
-
-          {/* Filter Dropdowns */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-            <div className="space-y-2">
-              <label className="text-xs sm:text-sm font-medium text-foreground">
-                Filtrar por categoria
-              </label>
-              <Select value={filtroCategoria} onValueChange={setFiltroCategoria}>
-                <SelectTrigger className="h-12 text-sm sm:text-base bg-background border-2 min-h-[48px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-2 z-50">
-                  <SelectItem value="todas" className="text-sm sm:text-base py-2 sm:py-3 min-h-[44px] cursor-pointer">
-                    Todas as categorias
-                  </SelectItem>
-                  {categorias.map((cat) => (
-                    <SelectItem key={cat} value={cat} className="text-sm sm:text-base py-2 sm:py-3 min-h-[44px] cursor-pointer">
-                      {cat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs sm:text-sm font-medium text-foreground">
-                Filtrar por status
-              </label>
-              <Select value={filtroStatus} onValueChange={setFiltroStatus}>
-                <SelectTrigger className="h-12 text-sm sm:text-base bg-background border-2 min-h-[48px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-2 z-50">
-                  <SelectItem value="todos" className="text-sm sm:text-base py-2 sm:py-3 min-h-[44px] cursor-pointer">
-                    Todos os status
-                  </SelectItem>
-                  {statusOptions.map((status) => (
-                    <SelectItem key={status} value={status} className="text-sm sm:text-base py-2 sm:py-3 min-h-[44px] cursor-pointer">
-                      {getStatusLabel(status)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Results Counter */}
-          <p className="text-xs sm:text-sm text-muted-foreground">
-            Mostrando {problemasFiltrados.length} de {problemas.length} problemas
-          </p>
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Status</Label>
+          <Select value={filtroStatus} onValueChange={setFiltroStatus}>
+            <SelectTrigger>
+              <SelectValue placeholder="Todos os status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos os status</SelectItem>
+              {statusOptions.map((status) => (
+                <SelectItem key={status} value={status}>{getStatusLabel(status)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      {/* Problems List */}
-      <main className="px-4 sm:px-6 md:px-8 py-6 sm:py-8 md:py-10 pb-40 sm:pb-36 md:pb-32">
-        <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">
-          {isLoading ? (
-            <Card className="p-6 sm:p-8 md:p-12 text-center">
-              <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground">
-                Carregando problemas...
-              </p>
-            </Card>
-          ) : problemasFiltrados.length === 0 ? (
-            <Card className="p-6 sm:p-8 md:p-12 text-center">
-              <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground">
-                Nenhum problema encontrado com os filtros selecionados.
-              </p>
-            </Card>
+      {/* Active filters and clear button */}
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+        <div className="flex flex-wrap gap-2">
+          {filtroCategoria !== "todas" && (
+            <Badge variant="secondary" className="text-xs">
+              {filtroCategoria}
+            </Badge>
+          )}
+          {filtroStatus !== "todos" && (
+            <Badge variant="secondary" className="text-xs">
+              {getStatusLabel(filtroStatus)}
+            </Badge>
+          )}
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={clearFilters}
+          className="text-xs h-8"
+        >
+          Limpar filtros
+        </Button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Header */}
+      <header className="border-b border-border bg-card px-4 py-3 sm:px-6 sm:py-4 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
+          <Button
+            variant="ghost"
+            size={isMobile ? "sm" : "default"}
+            onClick={() => navigate("/")}
+            className="min-h-[40px] sm:min-h-[44px]"
+          >
+            <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 sm:mr-2" />
+            <span className="hidden sm:inline">Voltar</span>
+          </Button>
+          
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground text-center flex-1 truncate">
+            Problemas Reportados
+          </h1>
+          
+          {/* Botão de filtros para mobile/tablet */}
+          {(isMobile || isTablet) ? (
+            <Sheet open={showFilters} onOpenChange={setShowFilters}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="min-h-[40px]"
+                >
+                  <Filter className="h-4 w-4" />
+                  <span className="sr-only sm:not-sr-only sm:ml-2">Filtros</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-full sm:w-80">
+                <SheetHeader className="mb-6">
+                  <SheetTitle>Filtrar Problemas</SheetTitle>
+                </SheetHeader>
+                <FilterContent />
+              </SheetContent>
+            </Sheet>
           ) : (
-            problemasFiltrados.map((problema) => {
-              const IconeCategoria = getCategoriaIcon(problema.categoria);
+            <div className="w-20" />
+          )}
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 px-3 sm:px-6 md:px-8 py-3 sm:py-4 md:py-6">
+        <div className="max-w-7xl mx-auto h-full flex flex-col gap-4 sm:gap-6">
+          {/* 🔍 Barra de Pesquisa e Filtros (Desktop) */}
+          {isDesktop && (
+            <Card className="p-4 sm:p-6 border-border">
+              <FilterContent />
+            </Card>
+          )}
+
+          {/* 📊 Contador de Resultados e Filtros Ativos */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex-1">
+              <p className="text-sm text-muted-foreground">
+                Mostrando <span className="font-semibold text-foreground">{problemasFiltrados.length}</span> de{" "}
+                <span className="font-semibold text-foreground">{problemas.length}</span> problemas
+              </p>
               
-              return (
-                <Card key={problema.id} className="p-4 sm:p-6 md:p-8 hover:shadow-lg transition-shadow">
-                  <div className="flex flex-col sm:flex-row items-start justify-between gap-4 sm:gap-6">
-                    {/* Left Section - Icon */}
-                    <div className="flex-shrink-0 self-start">
-                      <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                        <IconeCategoria className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-primary" />
-                      </div>
-                    </div>
+              {/* Filtros ativos (mobile/tablet) */}
+              {(isMobile || isTablet) && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {filtroCategoria !== "todas" && (
+                    <Badge variant="secondary" className="text-xs">
+                      {filtroCategoria}
+                    </Badge>
+                  )}
+                  {filtroStatus !== "todos" && (
+                    <Badge variant="secondary" className="text-xs">
+                      {getStatusLabel(filtroStatus)}
+                    </Badge>
+                  )}
+                  {(filtroCategoria !== "todas" || filtroStatus !== "todos") && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearFilters}
+                      className="text-xs h-6 px-2"
+                    >
+                      Limpar
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
 
-                    {/* Middle Section - Content */}
-                    <div className="flex-1 space-y-3 sm:space-y-4 min-w-0">
-                      <div className="space-y-1 sm:space-y-2">
-                        <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground break-words">
-                          {problema.titulo}
-                        </h3>
-                        <p className="text-sm sm:text-base md:text-lg text-muted-foreground break-words">
-                          {problema.descricao}
-                        </p>
-                      </div>
+            {/* Botão de filtros (mobile/tablet) visível apenas quando há filtros ativos */}
+            {(isMobile || isTablet) && (filtroCategoria !== "todas" || filtroStatus !== "todos" || busca) && (
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-9">
+                    <Filter className="h-3 w-3 mr-2" />
+                    Filtros
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-full sm:w-80">
+                  <SheetHeader className="mb-6">
+                    <SheetTitle>Filtrar Problemas</SheetTitle>
+                  </SheetHeader>
+                  <FilterContent />
+                </SheetContent>
+              </Sheet>
+            )}
+          </div>
 
-                      <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-                        <Badge variant="outline" className="text-xs sm:text-sm md:text-base py-1 sm:py-1.5 px-2 sm:px-4 border-2">
-                          {problema.categoria}
-                        </Badge>
-                        <Badge className={`text-xs sm:text-sm md:text-base py-1 sm:py-1.5 px-2 sm:px-4 border-2 ${getStatusColor(problema.status)}`}>
-                          {getStatusLabel(problema.status)}
-                        </Badge>
-                      </div>
-                    </div>
-
-                    {/* Right Section - Action Buttons */}
-                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                      <Button
-                        variant="outline"
-                        size="lg"
-                        onClick={() => handleViewOnMap(problema)}
-                        className="border-2 w-full sm:w-auto min-h-[48px]"
-                      >
-                        <MapPin className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                        <span className="text-sm sm:text-base">Ver no mapa</span>
-                      </Button>
-                      
-                      {isAdmin && (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="lg"
-                            onClick={() => handleEdit(problema)}
-                            className="border-2 w-full sm:w-auto min-h-[48px] text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                          >
-                            <Pencil className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                            <span className="text-sm sm:text-base">Editar</span>
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="lg"
-                            onClick={() => handleDeleteClick(problema.id)}
-                            className="border-2 w-full sm:w-auto min-h-[48px] text-red-600 hover:text-red-700 hover:bg-red-50"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                            <span className="text-sm sm:text-base">Excluir</span>
-                          </Button>
-                        </>
-                      )}
-                    </div>
+          {/* 📋 Lista de Problemas */}
+          <div className="space-y-4 sm:space-y-6">
+            {isLoading ? (
+              <Card className="p-8 sm:p-12 text-center">
+                <p className="text-base sm:text-lg md:text-xl text-muted-foreground">
+                  Carregando problemas...
+                </p>
+              </Card>
+            ) : problemasFiltrados.length === 0 ? (
+              <Card className="p-8 sm:p-12 text-center">
+                <div className="space-y-4">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full bg-muted flex items-center justify-center">
+                    <Search className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground" />
                   </div>
-                </Card>
-              );
-            })
+                  <p className="text-base sm:text-lg md:text-xl text-muted-foreground">
+                    Nenhum problema encontrado
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={clearFilters}
+                    className="mt-2"
+                  >
+                    Limpar filtros
+                  </Button>
+                </div>
+              </Card>
+            ) : (
+              problemasFiltrados.map((problema) => {
+                const IconeCategoria = getCategoriaIcon(problema.categoria);
+                
+                return (
+                  <Card 
+                    key={problema.id} 
+                    className="p-4 sm:p-6 hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={() => !isDesktop && handleViewOnMap(problema)}
+                  >
+                    <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+                      {/* Ícone da Categoria */}
+                      <div className="flex-shrink-0 self-start">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                          <IconeCategoria className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
+                        </div>
+                      </div>
+
+                      {/* Conteúdo */}
+                      <div className="flex-1 space-y-3 min-w-0">
+                        <div className="space-y-2">
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                            <h3 className="text-lg sm:text-xl font-semibold text-foreground break-words pr-2">
+                              {problema.titulo}
+                            </h3>
+                            <Badge className={`text-xs sm:text-sm py-1 px-3 ${getStatusColor(problema.status)}`}>
+                              {getStatusLabel(problema.status)}
+                            </Badge>
+                          </div>
+                          <p className="text-sm sm:text-base text-muted-foreground break-words line-clamp-2">
+                            {problema.descricao}
+                          </p>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant="outline" className="text-xs sm:text-sm">
+                            {problema.categoria}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            • {new Date(problema.data_criacao).toLocaleDateString('pt-BR')}
+                          </span>
+                        </div>
+
+                        {/* Botões de Ação (sempre visíveis para admin, condicionais para usuários) */}
+                        <div className={`flex flex-wrap gap-2 pt-2 ${isMobile ? 'justify-between' : ''}`}>
+                          <Button
+                            variant="outline"
+                            size={isMobile ? "sm" : "default"}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewOnMap(problema);
+                            }}
+                            className="flex-1 sm:flex-none min-w-[120px]"
+                          >
+                            <MapPin className="mr-2 h-4 w-4" />
+                            Ver no mapa
+                          </Button>
+                          
+                          {isAdmin && (
+                            <>
+                              <Button
+                                variant="outline"
+                                size={isMobile ? "sm" : "default"}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEdit(problema);
+                                }}
+                                className="flex-1 sm:flex-none min-w-[120px] text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                              >
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Editar
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size={isMobile ? "sm" : "default"}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteClick(problema.id);
+                                }}
+                                className="flex-1 sm:flex-none min-w-[120px] text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Excluir
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })
+            )}
+          </div>
+
+          {/* 📝 Dica para mobile */}
+          {isMobile && problemasFiltrados.length > 0 && (
+            <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+              <p className="text-xs text-blue-700 dark:text-blue-300 text-center">
+                💡 <strong>Toque em um problema</strong> para ver sua localização no mapa
+              </p>
+            </div>
           )}
         </div>
       </main>
 
-      {/* Footer - Fixed Button */}
-      <footer className="fixed bottom-0 left-0 right-0 border-t border-border bg-card px-4 sm:px-8 md:px-12 py-4 sm:py-6">
-        <div className="max-w-6xl mx-auto">
+      {/* Footer - Botão Fixo */}
+      <footer className="sticky bottom-0 left-0 right-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-3 sm:py-4">
+        <div className="max-w-7xl mx-auto">
           <Button
-            size="xl"
+            size={isMobile ? "default" : "lg"}
             onClick={() => navigate("/registrar")}
-            className="w-full min-h-[56px]"
+            className="w-full min-h-[48px] sm:min-h-[56px]"
           >
-            <Plus className="mr-2 sm:mr-3 h-5 w-5 sm:h-6 sm:w-6" />
-            <span className="text-sm sm:text-base md:text-lg">Registrar Novo Problema</span>
+            <Plus className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="text-sm sm:text-base">Registrar Novo Problema</span>
           </Button>
         </div>
       </footer>
 
-      {/* Edit Modal */}
+      {/* ✏️ Modal de Edição */}
       <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
-        <DialogContent className="max-w-lg mx-4">
+        <DialogContent className={`${isMobile ? 'max-w-[95vw] mx-2' : 'max-w-lg'}`}>
           <DialogHeader>
             <DialogTitle>Editar Problema</DialogTitle>
+            <DialogDescription>
+              Atualize as informações do problema
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label htmlFor="edit-titulo">Título</Label>
               <Input
@@ -357,6 +516,7 @@ const Ideias = () => {
                 value={editForm.titulo}
                 onChange={(e) => setEditForm({ ...editForm, titulo: e.target.value })}
                 className="min-h-[44px]"
+                placeholder="Digite o título do problema"
               />
             </div>
             <div className="space-y-2">
@@ -366,65 +526,76 @@ const Ideias = () => {
                 value={editForm.descricao}
                 onChange={(e) => setEditForm({ ...editForm, descricao: e.target.value })}
                 rows={3}
+                placeholder="Descreva o problema com detalhes"
               />
             </div>
-            <div className="space-y-2">
-              <Label>Categoria</Label>
-              <Select value={editForm.categoria} onValueChange={(v) => setEditForm({ ...editForm, categoria: v })}>
-                <SelectTrigger className="min-h-[44px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {categorias.map((cat) => (
-                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select value={editForm.status} onValueChange={(v) => setEditForm({ ...editForm, status: v })}>
-                <SelectTrigger className="min-h-[44px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {statusOptions.map((status) => (
-                    <SelectItem key={status} value={status}>{getStatusLabel(status)}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Categoria</Label>
+                <Select value={editForm.categoria} onValueChange={(v) => setEditForm({ ...editForm, categoria: v })}>
+                  <SelectTrigger className="min-h-[44px]">
+                    <SelectValue placeholder="Selecione uma categoria" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categorias.map((cat) => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={editForm.status} onValueChange={(v) => setEditForm({ ...editForm, status: v })}>
+                  <SelectTrigger className="min-h-[44px]">
+                    <SelectValue placeholder="Selecione um status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statusOptions.map((status) => (
+                      <SelectItem key={status} value={status}>{getStatusLabel(status)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
-          <DialogFooter className="flex gap-2">
-            <Button variant="outline" onClick={() => setEditModalOpen(false)}>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setEditModalOpen(false)} className="flex-1">
               Cancelar
             </Button>
-            <Button onClick={handleSaveEdit} disabled={atualizarProblema.isPending}>
-              {atualizarProblema.isPending ? "Salvando..." : "Salvar"}
+            <Button onClick={handleSaveEdit} disabled={atualizarProblema.isPending} className="flex-1">
+              {atualizarProblema.isPending ? "Salvando..." : "Salvar Alterações"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Modal */}
+      {/* 🗑️ Modal de Confirmação de Exclusão */}
       <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
-        <DialogContent className="max-w-md mx-4">
+        <DialogContent className={`${isMobile ? 'max-w-[95vw] mx-2' : 'max-w-md'}`}>
           <DialogHeader>
             <DialogTitle>Confirmar Exclusão</DialogTitle>
+            <DialogDescription>
+              Esta ação não pode ser desfeita. Tem certeza que deseja excluir este problema?
+            </DialogDescription>
           </DialogHeader>
-          <p className="text-muted-foreground py-4">
-            Tem certeza que deseja excluir este problema? Esta ação não pode ser desfeita.
-          </p>
-          <DialogFooter className="flex gap-2">
-            <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>
+          <div className="py-4">
+            <div className="flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                <Trash2 className="h-8 w-8 text-red-600 dark:text-red-400" />
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setDeleteModalOpen(false)} className="flex-1">
               Cancelar
             </Button>
             <Button 
               variant="destructive" 
               onClick={handleConfirmDelete}
               disabled={excluirProblema.isPending}
+              className="flex-1"
             >
-              {excluirProblema.isPending ? "Excluindo..." : "Excluir"}
+              {excluirProblema.isPending ? "Excluindo..." : "Sim, Excluir"}
             </Button>
           </DialogFooter>
         </DialogContent>
