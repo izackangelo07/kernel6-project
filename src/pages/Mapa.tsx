@@ -271,97 +271,92 @@ const Mapa = () => {
 
       {/* Main Content */}
       <main className="flex-1 px-4 sm:px-8 md:px-12 py-4 sm:py-6 md:py-8">
-        <div className="max-w-7xl mx-auto h-full flex flex-col lg:flex-row gap-4 sm:gap-6 md:gap-8">
-          {/* Map Area - Left Side */}
-          <div className="flex-1 flex flex-col gap-4">
-            <p className="text-sm sm:text-base md:text-lg text-center text-muted-foreground">
-              Clique no mapa para marcar onde está o problema
-            </p>
+        <div className="max-w-7xl mx-auto h-full flex flex-col gap-6">
 
-            {/* Leaflet Map */}
-            <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] rounded-xl overflow-hidden shadow-lg border-2 border-border">
-              <div ref={mapContainerRef} className="w-full h-full" />
-            </div>
-
-            {/* Selected Location Info */}
-            {selectedLocation && (
-              <Card className="p-4 bg-primary/5 border-primary/20">
-                <div className="flex items-start gap-3">
-                  <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm sm:text-base text-foreground">Localização selecionada</p>
-                    {loadingAddress ? (
-                      <p className="text-xs sm:text-sm text-muted-foreground">Buscando endereço...</p>
-                    ) : (
-                      <p className="text-xs sm:text-sm text-muted-foreground break-words">{address}</p>
-                    )}
-                  </div>
-                </div>
-              </Card>
-            )}
-
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={handleCancel}
-                className="flex-1 border-2 min-h-[52px]"
-                disabled={!selectedLocation}
-              >
-                <X className="mr-2 h-5 w-5" />
-                <span className="text-sm sm:text-base">Cancelar</span>
-              </Button>
-
-              <Button
-                size="lg"
-                onClick={handleConfirm}
-                className="flex-1 bg-green-600 hover:bg-green-700 min-h-[52px]"
-                disabled={!selectedLocation}
-              >
-                <Check className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
-                <span className="text-sm sm:text-base">Confirmar Localização</span>
-              </Button>
-            </div>
+          {/* 🔍 Barra de Pesquisa */}
+          <div className="w-full">
+            <input
+              type="text"
+              placeholder="Buscar endereço..."
+              className="w-full p-3 rounded-xl border border-border text-sm shadow-sm"
+            />
           </div>
 
-          {/* Side Panel - Right Side */}
-          <div className="lg:w-80 xl:w-96 space-y-4 sm:space-y-6">
-            {/* Legend Card */}
-            <Card className="p-4 sm:p-6 bg-card">
-              <h2 className="text-base sm:text-lg md:text-xl font-semibold text-foreground mb-4">
-                Legenda de Categorias
-              </h2>
-              <div className="space-y-3">
-                {[
-                  { categoria: "Iluminação pública", icon: Lightbulb },
-                  { categoria: "Limpeza urbana", icon: Trash2 },
-                  { categoria: "Buraco na rua", icon: Construction },
-                  { categoria: "Áreas verdes / praças", icon: Trees },
-                  { categoria: "Escola / creche", icon: School },
-                  { categoria: "Segurança", icon: Shield },
-                ].map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <div key={item.categoria} className="flex items-center gap-3">
-                      <div className={`${getCategoriaColor(item.categoria)} rounded-full p-2 flex-shrink-0`}>
-                        <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                      </div>
-                      <span className="text-xs sm:text-sm text-foreground">{item.categoria}</span>
-                    </div>
-                  );
-                })}
+          {/* 🌍 Mapa Tela Cheia */}
+          <div className="relative w-full h-[75vh] sm:h-[78vh] md:h-[80vh] rounded-xl overflow-hidden shadow-lg border-2 border-border">
+            <div ref={mapContainerRef} className="w-full h-full" />
+          </div>
+
+          {/* 📍 Info da Localização */}
+          {selectedLocation && (
+            <Card className="p-4 bg-primary/5 border-primary/20">
+              <div className="flex items-start gap-3">
+                <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm sm:text-base text-foreground">
+                    Localização selecionada
+                  </p>
+                  {loadingAddress ? (
+                    <p className="text-xs text-muted-foreground">Buscando endereço...</p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground break-words">{address}</p>
+                  )}
+                </div>
               </div>
             </Card>
+          )}
 
-            {/* Instructions Card */}
-            <Card className="p-4 sm:p-6 bg-primary/5 border-primary/20">
-              <p className="text-xs sm:text-sm text-center text-muted-foreground leading-relaxed">
-                <MapPin className="h-4 w-4 inline-block mr-1 text-primary" />
-                Clique no mapa para marcar sua localização. Os pontos coloridos mostram problemas já reportados.
-              </p>
-            </Card>
+          {/* 🟦 Botões */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={handleCancel}
+              className="flex-1 border-2 min-h-[52px]"
+              disabled={!selectedLocation}
+            >
+              <X className="mr-2 h-5 w-5" />
+              Cancelar
+            </Button>
+
+            <Button
+              size="lg"
+              onClick={handleConfirm}
+              className="flex-1 bg-green-600 hover:bg-green-700 min-h-[52px]"
+              disabled={!selectedLocation}
+            >
+              <Check className="mr-2 h-5 w-5" />
+              Confirmar Localização
+            </Button>
           </div>
+
+          {/* 🟪 Legenda Abaixo */}
+          <Card className="p-4 sm:p-6 bg-card">
+            <h2 className="text-base sm:text-lg font-semibold text-foreground mb-4">
+              Legenda de Categorias
+            </h2>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[
+                { categoria: "Iluminação pública", icon: Lightbulb },
+                { categoria: "Limpeza urbana", icon: Trash2 },
+                { categoria: "Buraco na rua", icon: Construction },
+                { categoria: "Áreas verdes / praças", icon: Trees },
+                { categoria: "Escola / creche", icon: School },
+                { categoria: "Segurança", icon: Shield },
+              ].map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div key={item.categoria} className="flex items-center gap-3">
+                    <div className={`${getCategoriaColor(item.categoria)} rounded-full p-2`}>
+                      <Icon className="h-4 w-4 text-white" />
+                    </div>
+                    <span className="text-sm">{item.categoria}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
         </div>
       </main>
     </div>
