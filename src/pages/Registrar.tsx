@@ -21,7 +21,7 @@ const Registrar = () => {
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [foto, setFoto] = useState<File | null>(null);
-  const [localizacao, setLocalizacao] = useState<{ lat: number; lng: number } | null>(null);
+  const [localizacao, setLocalizacao] = useState<{ lat: number; lng: number; endereco?: string } | null>(null);
   const criarProblema = useCriarProblema();
 
   // Verificar se há localização salva no sessionStorage
@@ -206,13 +206,20 @@ const Registrar = () => {
               variant="outline"
               size="xl"
               onClick={() => navigate("/mapa")}
-              className="w-full border-2 min-h-[56px]"
+              className={`w-full border-2 min-h-[56px] ${localizacao ? 'border-green-500 bg-green-50' : ''}`}
             >
-              <MapPin className="mr-2 sm:mr-3 h-5 w-5 sm:h-6 sm:w-6" />
-              <span className="text-sm sm:text-base md:text-lg">
-                {localizacao ? "Localização marcada ✓" : "Marcar no mapa"}
+              <MapPin className={`mr-2 sm:mr-3 h-5 w-5 sm:h-6 sm:w-6 ${localizacao ? 'text-green-600' : ''}`} />
+              <span className="text-sm sm:text-base md:text-lg text-left flex-1 truncate">
+                {localizacao 
+                  ? localizacao.endereco || "Localização marcada ✓" 
+                  : "Marcar no mapa"}
               </span>
             </Button>
+            {localizacao?.endereco && (
+              <p className="text-xs sm:text-sm text-muted-foreground pl-1">
+                📍 {localizacao.endereco}
+              </p>
+            )}
           </div>
 
           {/* Submit Button */}

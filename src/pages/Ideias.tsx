@@ -1,8 +1,8 @@
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Lightbulb, Trash2, Construction, Trees, School, Shield, HelpCircle, MapPin, Plus, Search } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { ArrowLeft, Lightbulb, Trash2, Construction, Trees, School, Shield, HelpCircle, MapPin, Plus, Search, Pencil } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -12,7 +12,12 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { useProblemas } from "@/hooks/useProblemas";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useProblemas, useAtualizarProblema, useExcluirProblema, Problema } from "@/hooks/useProblemas";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const getCategoriaIcon = (categoria: string) => {
   const iconMap: Record<string, any> = {
@@ -47,22 +52,42 @@ const getStatusLabel = (status: string) => {
   return labelMap[status] || status;
 };
 
+const categorias = [
+  "Iluminação pública",
+  "Limpeza urbana",
+  "Buraco na rua",
+  "Áreas verdes / praças",
+  "Escola / creche",
+  "Segurança",
+  "Outro",
+];
+
+const statusOptions = ["pendente", "em_analise", "aprovado", "rejeitado"];
+
 const Ideias = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { isAdmin } = useAuth();
   const [busca, setBusca] = useState("");
   const [filtroCategoria, setFiltroCategoria] = useState<string>("todas");
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
   const { data: problemas = [], isLoading } = useProblemas();
+  const atualizarProblema = useAtualizarProblema();
+  const excluirProblema = useExcluirProblema();
+  
+  // Edit modal state
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingProblema, setEditingProblema] = useState<Problema | null>(null);
+  const [editForm, setEditForm] = useState({
+    titulo: "",
+    descricao: "",
+    categoria: "",
+    status: "",
+  });
 
-  const categorias = [
-    "Iluminação pública",
-    "Limpeza urbana",
-    "Buraco na rua",
-    "Áreas verdes / praças",
-    "Escola / creche",
-    "Segurança",
-    "Outro",
-  ];
+  // Delete confirmation state
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const problemasFiltrados = useMemo(() => {
     return problemas.filter((problema) => {
@@ -75,6 +100,53 @@ const Ideias = () => {
       return matchBusca && matchCategoria && matchStatus;
     });
   }, [busca, filtroCategoria, filtroStatus, problemas]);
+
+  const handleEdit = (problema: Problema) => {
+    setEditingProblema(problema);
+    setEditForm({
+      titulo: problema.titulo,
+      descricao: problema.descricao,
+      categoria: problema.categoria,
+      status: problema.status,
+    });
+    setEditModalOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingProblema) return;
+    
+    try {
+      await atualizarProblema.mutateAsync({
+        id: editingProblema.id,
+        ...editForm,
+      });
+      setEditModalOpen(false);
+      setEditingProblema(null);
+    } catch (error) {
+      // Error handled by mutation
+    }
+  };
+
+  const handleDeleteClick = (id: string) => {
+    setDeletingId(id);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingId) return;
+    
+    try {
+      await excluirProblema.mutateAsync(deletingId);
+      setDeleteModalOpen(false);
+      setDeletingId(null);
+    } catch (error) {
+      // Error handled by mutation
+    }
+  };
+
+  const handleViewOnMap = (problema: Problema) => {
+    navigate(`/mapa?lat=${problema.latitude}&lng=${problema.longitude}&id=${problema.id}`);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -147,18 +219,11 @@ const Ideias = () => {
                   <SelectItem value="todos" className="text-sm sm:text-base py-2 sm:py-3 min-h-[44px] cursor-pointer">
                     Todos os status
                   </SelectItem>
-                  <SelectItem value="pendente" className="text-sm sm:text-base py-2 sm:py-3 min-h-[44px] cursor-pointer">
-                    Pendente
-                  </SelectItem>
-                  <SelectItem value="em_analise" className="text-sm sm:text-base py-2 sm:py-3 min-h-[44px] cursor-pointer">
-                    Em análise
-                  </SelectItem>
-                  <SelectItem value="aprovado" className="text-sm sm:text-base py-2 sm:py-3 min-h-[44px] cursor-pointer">
-                    Aprovado
-                  </SelectItem>
-                  <SelectItem value="rejeitado" className="text-sm sm:text-base py-2 sm:py-3 min-h-[44px] cursor-pointer">
-                    Rejeitado
-                  </SelectItem>
+                  {statusOptions.map((status) => (
+                    <SelectItem key={status} value={status} className="text-sm sm:text-base py-2 sm:py-3 min-h-[44px] cursor-pointer">
+                      {getStatusLabel(status)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -221,17 +286,40 @@ const Ideias = () => {
                       </div>
                     </div>
 
-                    {/* Right Section - Action Button */}
-                    <div className="flex-shrink-0 w-full sm:w-auto">
+                    {/* Right Section - Action Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                       <Button
                         variant="outline"
                         size="lg"
-                        onClick={() => navigate("/mapa")}
+                        onClick={() => handleViewOnMap(problema)}
                         className="border-2 w-full sm:w-auto min-h-[48px]"
                       >
                         <MapPin className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                         <span className="text-sm sm:text-base">Ver no mapa</span>
                       </Button>
+                      
+                      {isAdmin && (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="lg"
+                            onClick={() => handleEdit(problema)}
+                            className="border-2 w-full sm:w-auto min-h-[48px] text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          >
+                            <Pencil className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                            <span className="text-sm sm:text-base">Editar</span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="lg"
+                            onClick={() => handleDeleteClick(problema.id)}
+                            className="border-2 w-full sm:w-auto min-h-[48px] text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                            <span className="text-sm sm:text-base">Excluir</span>
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </Card>
@@ -254,6 +342,93 @@ const Ideias = () => {
           </Button>
         </div>
       </footer>
+
+      {/* Edit Modal */}
+      <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+        <DialogContent className="max-w-lg mx-4">
+          <DialogHeader>
+            <DialogTitle>Editar Problema</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-titulo">Título</Label>
+              <Input
+                id="edit-titulo"
+                value={editForm.titulo}
+                onChange={(e) => setEditForm({ ...editForm, titulo: e.target.value })}
+                className="min-h-[44px]"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-descricao">Descrição</Label>
+              <Textarea
+                id="edit-descricao"
+                value={editForm.descricao}
+                onChange={(e) => setEditForm({ ...editForm, descricao: e.target.value })}
+                rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Categoria</Label>
+              <Select value={editForm.categoria} onValueChange={(v) => setEditForm({ ...editForm, categoria: v })}>
+                <SelectTrigger className="min-h-[44px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {categorias.map((cat) => (
+                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Status</Label>
+              <Select value={editForm.status} onValueChange={(v) => setEditForm({ ...editForm, status: v })}>
+                <SelectTrigger className="min-h-[44px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {statusOptions.map((status) => (
+                    <SelectItem key={status} value={status}>{getStatusLabel(status)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" onClick={() => setEditModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={atualizarProblema.isPending}>
+              {atualizarProblema.isPending ? "Salvando..." : "Salvar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Modal */}
+      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+        <DialogContent className="max-w-md mx-4">
+          <DialogHeader>
+            <DialogTitle>Confirmar Exclusão</DialogTitle>
+          </DialogHeader>
+          <p className="text-muted-foreground py-4">
+            Tem certeza que deseja excluir este problema? Esta ação não pode ser desfeita.
+          </p>
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleConfirmDelete}
+              disabled={excluirProblema.isPending}
+            >
+              {excluirProblema.isPending ? "Excluindo..." : "Excluir"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
