@@ -228,14 +228,6 @@ const Registrar = () => {
           <div className={`space-y-4 ${
             isTablet ? 'space-y-3' : 'sm:space-y-6'
           }`}>
-            
-            {/* Indicador de dados salvos */}
-            {(categoria || titulo || descricao) && (
-              <div className="flex items-center gap-2 text-xs sm:text-sm text-green-600 bg-green-50 dark:bg-green-900/20 p-2 sm:p-3 rounded-lg">
-                <Save className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                <span>Dados salvos automaticamente</span>
-              </div>
-            )}
 
             {/* 1. Categoria */}
             <Card className={`p-3 sm:p-4 border-border ${
@@ -453,7 +445,7 @@ const Registrar = () => {
                   } ${localizacao ? 'text-green-600' : ''}`} />
                   <span className="text-left flex-1 truncate">
                     {localizacao 
-                      ? "✓ Local marcada" 
+                      ? "✓ Local Marcado" 
                       : "Marcar no Mapa"
                     }
                   </span>
@@ -546,17 +538,6 @@ const Registrar = () => {
                   </>
                 )}
               </Button>
-              
-              <p className={`text-center mt-1 ${
-                categoria && titulo && descricao && localizacao 
-                  ? 'text-green-600' 
-                  : 'text-muted-foreground'
-              } ${isTablet ? 'text-xs' : 'text-xs sm:text-sm'}`}>
-                {categoria && titulo && descricao && localizacao 
-                  ? "✅ Todos os campos preenchidos"
-                  : "* Campos obrigatórios"
-                }
-              </p>
             </div>
           </div>
         </form>
