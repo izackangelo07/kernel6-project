@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, MapPin, Check, X, Lightbulb, Trash2, Construction, Trees, School, Shield, Search, Menu, ZoomIn, ZoomOut, Locate, Maximize, Minimize, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, MapPin, Check, X, Lightbulb, Trash2, Construction, Trees, School, Shield, Search, Locate, Maximize, Minimize, ZoomIn } from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,9 +9,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useProblemas } from "@/hooks/useProblemas";
 import { debounce } from "lodash";
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Drawer, DrawerContent, DrawerTrigger, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useResponsive } from "@/hooks/useResponsive";
 
 // Coordenadas de Recife
 const RECIFE_LAT = -8.0301;
@@ -29,7 +27,7 @@ const getCategoriaColor = (categoria: string) => {
   return colorMap[categoria] || "bg-gray-500";
 };
 
-// Ícone customizado para cada categoria (responsivo)
+// Ícone customizado para cada categoria
 const createCustomIcon = (categoria: string, isMobile: boolean = false) => {
   const colorMap: Record<string, string> = {
     "Iluminação pública": "#eab308",
@@ -55,7 +53,7 @@ const createCustomIcon = (categoria: string, isMobile: boolean = false) => {
   });
 };
 
-// Ícone para nova localização (responsivo)
+// Ícone para nova localização
 const createNewLocationIcon = (isMobile: boolean = false) => {
   const size = isMobile ? 32 : 40;
   
@@ -88,7 +86,6 @@ const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
     const data = await response.json();
     
     if (data.display_name) {
-      // Simplificar o endereço
       const parts = data.display_name.split(',');
       return parts.slice(0, 3).join(',').trim();
     }
@@ -123,28 +120,6 @@ const searchAddress = async (query: string): Promise<SearchResult[]> => {
   }
 };
 
-// Hook personalizado para detectar tamanho da tela
-const useResponsive = () => {
-  const [isMobile, setIsMobile] = useState(false);
-  const [isTablet, setIsTablet] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(false);
-
-  useEffect(() => {
-    const checkScreenSize = () => {
-      const width = window.innerWidth;
-      setIsMobile(width < 768);
-      setIsTablet(width >= 768 && width < 1024);
-      setIsDesktop(width >= 1024);
-    };
-
-    checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-    return () => window.removeEventListener('resize', checkScreenSize);
-  }, []);
-
-  return { isMobile, isTablet, isDesktop };
-};
-
 interface SearchResult {
   display_name: string;
   lat: string;
@@ -175,8 +150,6 @@ const Mapa = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showLegend, setShowLegend] = useState(false);
-  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
 
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -255,7 +228,6 @@ const Mapa = () => {
         mapRef.current.removeLayer(searchMarkerRef.current);
       }
       
-      // Limpar marcador de nova localização se existir
       if (newLocationMarkerRef.current) {
         mapRef.current.removeLayer(newLocationMarkerRef.current);
         newLocationMarkerRef.current = null;
@@ -274,7 +246,6 @@ const Mapa = () => {
       
       searchMarkerRef.current = marker;
       
-      // Fazer reverse geocoding para obter endereço completo
       setLoadingAddress(true);
       const enderecoCompleto = await reverseGeocode(lat, lng);
       setAddress(enderecoCompleto);
@@ -300,11 +271,6 @@ const Mapa = () => {
       setSearchQuery(result.display_name);
       setSearchResults([]);
       setShowResults(false);
-      
-      // Em mobile, recolher a barra de pesquisa após seleção
-      if (isMobile) {
-        setIsSearchExpanded(false);
-      }
       
       toast.success("Localização encontrada e selecionada!");
     }
@@ -389,7 +355,6 @@ const Mapa = () => {
       setSelectedLocation({ lat, lng });
       setLoadingAddress(true);
 
-      // Limpar marcadores anteriores
       if (searchMarkerRef.current) {
         map.removeLayer(searchMarkerRef.current);
         searchMarkerRef.current = null;
@@ -491,7 +456,6 @@ const Mapa = () => {
         marker.openPopup();
       }
 
-      // Em mobile, só abre popup no clique
       if (!isMobile) {
         marker.on("mouseover", function () {
           this.openPopup();
@@ -554,12 +518,12 @@ const Mapa = () => {
     };
   }, []);
 
-  // Conteúdo da legenda
+  // Legenda de categorias
   const LegendContent = () => (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold text-foreground">
-        Legenda de Categorias
-      </h2>
+      <h3 className="text-base font-semibold text-foreground">
+        📍 Legenda do Mapa
+      </h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {[
           { categoria: "Iluminação pública", icon: Lightbulb },
@@ -580,15 +544,15 @@ const Mapa = () => {
           );
         })}
       </div>
-      <div className="pt-4 border-t">
-        <p className="text-sm text-muted-foreground">
-          <strong>Como usar:</strong>
-        </p>
-        <ul className="text-sm text-muted-foreground space-y-1 mt-2">
+      <div className="pt-3 border-t">
+        <p className="text-sm font-medium text-foreground mb-2">Como usar:</p>
+        <ul className="text-xs text-muted-foreground space-y-1">
           <li>• Toque/clique no mapa para marcar um local</li>
-          <li>• Digite na busca para encontrar endereços</li>
-          <li>• Use os botões para navegar pelo mapa</li>
-          <li>• Confirme a localização para registrar um problema</li>
+          <li>• Use a busca para encontrar endereços</li>
+          <li>• Confirme a localização quando estiver pronto</li>
+          {isMobile && (
+            <li>• Use os botões no mapa para navegar</li>
+          )}
         </ul>
       </div>
     </div>
@@ -610,33 +574,24 @@ const Mapa = () => {
           </Button>
           
           <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground text-center flex-1 truncate">
-            Mapa de Problemas
+            Mapa
           </h1>
           
-          {/* Botão de legenda para mobile/tablet */}
-          {(isMobile || isTablet) ? (
-            <Sheet open={showLegend} onOpenChange={setShowLegend}>
-              <SheetTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="min-h-[40px]"
-                >
-                  <Menu className="h-4 w-4" />
-                  <span className="sr-only sm:not-sr-only sm:ml-2">Legenda</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side={isMobile ? "bottom" : "right"} className={isMobile ? "h-[80vh]" : ""}>
-                <SheetHeader>
-                  <SheetTitle>Legenda e Instruções</SheetTitle>
-                </SheetHeader>
-                <div className="mt-6">
-                  <LegendContent />
-                </div>
-              </SheetContent>
-            </Sheet>
-          ) : (
-            <div className="w-24" />
+          {/* Botão de tela cheia para mobile */}
+          {isMobile && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleFullscreen}
+              className="min-h-[40px]"
+              title={isFullscreen ? "Sair da tela cheia" : "Tela cheia"}
+            >
+              {isFullscreen ? (
+                <Minimize className="h-4 w-4" />
+              ) : (
+                <Maximize className="h-4 w-4" />
+              )}
+            </Button>
           )}
         </div>
       </header>
@@ -644,11 +599,80 @@ const Mapa = () => {
       {/* Main Content */}
       <main className="flex-1 px-3 sm:px-6 md:px-8 py-3 sm:py-4 md:py-6">
         <div className="max-w-7xl mx-auto h-full flex flex-col gap-4 sm:gap-6">
-          {/* 🌍 Container do Mapa com Controles */}
-          <div className="relative w-full rounded-lg sm:rounded-xl overflow-hidden shadow-lg border border-border">
+          {/* 🔍 Barra de Pesquisa */}
+          <div className="search-container relative">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder={isMobile ? "Buscar endereço..." : "Digite um endereço para buscar..."}
+                className="w-full pl-10 pr-10 py-4 rounded-lg border border-border text-sm"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowResults(true);
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (searchResults.length > 0) {
+                    setShowResults(true);
+                  }
+                }}
+              />
+              {searchQuery && (
+                <button
+                  onClick={handleClearSearch}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Dropdown de resultados */}
+            {showResults && (searchResults.length > 0 || isSearching) && (
+              <div 
+                className="absolute z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {isSearching ? (
+                  <div className="p-4 text-center text-sm text-muted-foreground">
+                    Buscando...
+                  </div>
+                ) : (
+                  searchResults.map((result, index) => (
+                    <button
+                      key={`${result.lat}-${result.lon}-${index}`}
+                      className="w-full text-left p-3 hover:bg-accent transition-colors border-b border-border last:border-b-0"
+                      onClick={() => handleSelectResult(result)}
+                    >
+                      <div className="flex items-start gap-2">
+                        <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm text-foreground truncate">
+                            {result.display_name.split(',')[0]}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {result.display_name.split(',').slice(1, 3).join(',').trim()}
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* 🌍 Container do Mapa */}
+          <div className="relative w-full rounded-lg overflow-hidden shadow-lg border border-border">
             <div 
               ref={mapContainerRef} 
-              className="w-full h-[55vh] sm:h-[60vh] md:h-[65vh]"
+              className={`w-full ${
+                isMobile ? 'h-[55vh]' : 
+                isTablet ? 'h-[60vh]' : 
+                'h-[65vh]'
+              }`}
             />
             
             {/* Controles customizados para mobile */}
@@ -672,197 +696,6 @@ const Mapa = () => {
                 >
                   <Locate className="h-5 w-5" />
                 </Button>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  className="h-10 w-10 p-0 rounded-full shadow-lg"
-                  onClick={toggleFullscreen}
-                  title={isFullscreen ? "Sair da tela cheia" : "Tela cheia"}
-                >
-                  {isFullscreen ? (
-                    <Minimize className="h-5 w-5" />
-                  ) : (
-                    <Maximize className="h-5 w-5" />
-                  )}
-                </Button>
-              </div>
-            )}
-          </div>
-
-          {/* 🔍 Barra de Pesquisa ABAIXO DO MAPA */}
-          <div className="search-container">
-            {isMobile ? (
-              // Versão mobile com Collapsible
-              <Collapsible
-                open={isSearchExpanded}
-                onOpenChange={setIsSearchExpanded}
-                className="w-full"
-              >
-                <div className="flex items-center gap-2">
-                  <CollapsibleTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="flex-1 justify-between"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Search className="h-4 w-4" />
-                        <span className="text-sm">
-                          {searchQuery ? `"${searchQuery.substring(0, 20)}${searchQuery.length > 20 ? '...' : ''}"` : "Buscar endereço"}
-                        </span>
-                      </div>
-                      {isSearchExpanded ? (
-                        <ChevronUp className="h-4 w-4" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </CollapsibleTrigger>
-                  
-                  {searchQuery && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleClearSearch}
-                      className="h-10 w-10 p-0"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-                
-                <CollapsibleContent className="mt-2">
-                  <div className="relative">
-                    <Input
-                      type="text"
-                      placeholder="Digite um endereço..."
-                      className="w-full pl-10 pr-10 py-4 rounded-lg border border-border text-sm"
-                      value={searchQuery}
-                      onChange={(e) => {
-                        setSearchQuery(e.target.value);
-                        setShowResults(true);
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                      autoFocus
-                    />
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    
-                    {/* Dropdown de resultados mobile */}
-                    {showResults && (searchResults.length > 0 || isSearching) && (
-                      <div 
-                        className="absolute z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {isSearching ? (
-                          <div className="p-4 text-center text-sm text-muted-foreground">
-                            Buscando...
-                          </div>
-                        ) : (
-                          searchResults.map((result, index) => (
-                            <button
-                              key={`${result.lat}-${result.lon}-${index}`}
-                              className="w-full text-left p-3 hover:bg-accent transition-colors border-b border-border last:border-b-0"
-                              onClick={() => handleSelectResult(result)}
-                            >
-                              <div className="flex items-start gap-2">
-                                <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium text-sm text-foreground truncate">
-                                    {result.display_name.split(',')[0]}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground truncate">
-                                    {result.display_name.split(',').slice(1, 3).join(',').trim()}
-                                  </p>
-                                </div>
-                              </div>
-                            </button>
-                          ))
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            ) : (
-              // Versão desktop/tablet
-              <div className="relative">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="text"
-                    placeholder="Digite um endereço para buscar (mínimo 3 caracteres)..."
-                    className="w-full pl-10 pr-10 py-4 sm:py-5 rounded-lg sm:rounded-xl border border-border text-sm shadow-sm"
-                    value={searchQuery}
-                    onChange={(e) => {
-                      setSearchQuery(e.target.value);
-                      setShowResults(true);
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (searchResults.length > 0) {
-                        setShowResults(true);
-                      }
-                    }}
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={handleClearSearch}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-
-                {/* Dropdown de resultados */}
-                {showResults && (searchResults.length > 0 || isSearching) && (
-                  <div 
-                    className="absolute z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {isSearching ? (
-                      <div className="p-4 text-center text-sm text-muted-foreground">
-                        Buscando...
-                      </div>
-                    ) : (
-                      <>
-                        {searchResults.map((result, index) => (
-                          <button
-                            key={`${result.lat}-${result.lon}-${index}`}
-                            className="w-full text-left p-3 hover:bg-accent transition-colors border-b border-border last:border-b-0"
-                            onClick={() => handleSelectResult(result)}
-                          >
-                            <div className="flex items-start gap-2">
-                              <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium text-sm text-foreground truncate">
-                                  {result.display_name.split(',')[0]}
-                                </p>
-                                <p className="text-xs text-muted-foreground truncate">
-                                  {result.display_name.split(',').slice(1, 3).join(',').trim()}
-                                </p>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <span className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded-full">
-                                    {result.type}
-                                  </span>
-                                  {!isMobile && (
-                                    <span className="text-xs text-muted-foreground">
-                                      Relevância: {(result.importance * 100).toFixed(0)}%
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </button>
-                        ))}
-                        <div className="p-2 border-t border-border text-center">
-                          <p className="text-xs text-muted-foreground">
-                            Dados fornecidos por OpenStreetMap
-                          </p>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )}
               </div>
             )}
           </div>
@@ -930,12 +763,10 @@ const Mapa = () => {
             </Button>
           </div>
 
-          {/* 🟪 Legenda (apenas desktop) */}
-          {isDesktop && (
-            <Card className="p-4 md:p-6 bg-card">
-              <LegendContent />
-            </Card>
-          )}
+          {/* 🟪 LEGENDA/ajuda fixa no final da tela */}
+          <Card className="p-4 sm:p-6 bg-card border-border mt-2">
+            <LegendContent />
+          </Card>
 
           {/* Dicas para mobile */}
           {isMobile && !selectedLocation && (
@@ -947,52 +778,6 @@ const Mapa = () => {
           )}
         </div>
       </main>
-
-      {/* Footer para mobile */}
-      {isMobile && (
-        <footer className="border-t border-border bg-card p-3">
-          <div className="flex justify-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={centerOnRecife}
-              className="text-xs"
-            >
-              <ZoomIn className="h-3 w-3 mr-1" />
-              Recife
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={locateUser}
-              className="text-xs"
-            >
-              <Locate className="h-3 w-3 mr-1" />
-              Localizar
-            </Button>
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-xs"
-                >
-                  <Menu className="h-3 w-3 mr-1" />
-                  Ajuda
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="bottom" className="h-[70vh]">
-                <SheetHeader>
-                  <SheetTitle>Ajuda e Legenda</SheetTitle>
-                </SheetHeader>
-                <div className="mt-6">
-                  <LegendContent />
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
-        </footer>
-      )}
     </div>
   );
 };
