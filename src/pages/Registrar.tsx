@@ -29,8 +29,10 @@ const Registrar = () => {
   const [isLargeTablet, setIsLargeTablet] = useState(false);
   const [isMediumTablet, setIsMediumTablet] = useState(false);
   const [isSmallTablet, setIsSmallTablet] = useState(false);
+  const [fontSize, setFontSize] = useState("text-sm");
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Verificar resolução da tela
+  // Verificar resolução da tela e dispositivo
   useEffect(() => {
     const checkResolution = () => {
       const width = window.innerWidth;
@@ -40,17 +42,34 @@ const Registrar = () => {
       setIsLargeTablet(false);
       setIsMediumTablet(false);
       setIsSmallTablet(false);
+      setIsMobile(false);
       
-      // Verificar resoluções específicas
+      // Verificar se é mobile (baseado na largura)
+      if (width < 768) {
+        setIsMobile(true);
+        setFontSize("text-sm");
+        return;
+      }
+      
+      // Verificar resoluções específicas de tablets
       if (width === 1024 && height === 1366) {
-        // iPad Pro 12.9" portrait
+        // iPad Pro 12.9" portrait - +10%
         setIsLargeTablet(true);
+        setFontSize("text-base");
       } else if (width === 820 && height === 1180) {
-        // iPad Air 10.9" portrait
+        // iPad Air 10.9" portrait - padrão
         setIsMediumTablet(true);
+        setFontSize("text-sm");
       } else if (width === 768 && height === 1024) {
-        // iPad Mini 7.9" portrait
+        // iPad Mini 7.9" portrait - +5%
         setIsSmallTablet(true);
+        setFontSize("text-sm");
+      } else if (width >= 768 && width <= 1024) {
+        // Tablet genérico
+        setFontSize("text-sm");
+      } else {
+        // Desktop
+        setFontSize("text-base");
       }
     };
 
@@ -62,45 +81,51 @@ const Registrar = () => {
 
   // Funções para obter as alturas baseadas na resolução
   const getInputHeight = () => {
-    if (isLargeTablet) return "h-14"; // 20% maior
-    if (isMediumTablet) return "h-13"; // 10% maior
-    if (isSmallTablet) return "h-12"; // 5% maior
-    return "h-12"; // padrão
+    if (isLargeTablet) return "h-14"; // 10% maior (iPad Pro)
+    if (isMediumTablet) return "h-12"; // padrão (iPad Air)
+    if (isSmallTablet) return "h-13"; // 5% maior (iPad Mini)
+    if (isMobile) return "h-10"; // mobile
+    return "h-12"; // desktop padrão
   };
 
   const getTextareaHeight = () => {
-    if (isLargeTablet) return "min-h-[120px]"; // 20% maior
-    if (isMediumTablet) return "min-h-[110px]"; // 10% maior
+    if (isLargeTablet) return "min-h-[110px]"; // 10% maior
+    if (isMediumTablet) return "min-h-[100px]"; // padrão
     if (isSmallTablet) return "min-h-[105px]"; // 5% maior
-    return "min-h-[100px]"; // padrão
+    if (isMobile) return "min-h-[80px]"; // mobile
+    return "min-h-[100px]"; // desktop
   };
 
   const getButtonHeight = () => {
-    if (isLargeTablet) return "h-14"; // 20% maior
-    if (isMediumTablet) return "h-13"; // 10% maior
-    if (isSmallTablet) return "h-12"; // 5% maior
-    return "h-12"; // padrão
+    if (isLargeTablet) return "h-14"; // 10% maior
+    if (isMediumTablet) return "h-12"; // padrão
+    if (isSmallTablet) return "h-13"; // 5% maior
+    if (isMobile) return "h-10"; // mobile
+    return "h-12"; // desktop
   };
 
   const getFotoPreviewHeight = () => {
-    if (isLargeTablet) return "h-48"; // 20% maior
-    if (isMediumTablet) return "h-44"; // 10% maior
+    if (isLargeTablet) return "h-44"; // 10% maior
+    if (isMediumTablet) return "h-40"; // padrão
     if (isSmallTablet) return "h-42"; // 5% maior
-    return "h-40"; // padrão
+    if (isMobile) return "h-32"; // mobile
+    return "h-40"; // desktop
   };
 
   const getCardPadding = () => {
-    if (isLargeTablet) return "p-5"; // 20% maior
-    if (isMediumTablet) return "p-4.5"; // Use p-5 com scale?
-    if (isSmallTablet) return "p-4"; // 5% maior
-    return "p-4"; // padrão
+    if (isLargeTablet) return "p-4 sm:p-5"; // 10% maior
+    if (isMediumTablet) return "p-4"; // padrão
+    if (isSmallTablet) return "p-4 sm:p-5"; // 5% maior
+    if (isMobile) return "p-3"; // mobile
+    return "p-4 sm:p-6"; // desktop
   };
 
   const getSpacing = () => {
-    if (isLargeTablet) return "space-y-4"; // 20% maior
-    if (isMediumTablet) return "space-y-3.5"; // 10% maior
-    if (isSmallTablet) return "space-y-3"; // 5% maior
-    return "space-y-3"; // padrão
+    if (isLargeTablet) return "space-y-3.5"; // 10% maior
+    if (isMediumTablet) return "space-y-3"; // padrão
+    if (isSmallTablet) return "space-y-3.5"; // 5% maior
+    if (isMobile) return "space-y-2.5"; // mobile
+    return "space-y-4"; // desktop
   };
 
   // Efeito para carregar localização
@@ -238,15 +263,17 @@ const Registrar = () => {
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
           <Button
             variant="ghost"
-            size={window.innerWidth < 640 ? "sm" : "default"}
+            size={isMobile ? "sm" : "default"}
             onClick={() => navigate("/ideias")}
-            className="min-h-[40px] sm:min-h-[44px]"
+            className={`min-h-[40px] ${isMobile ? 'min-h-[36px]' : 'sm:min-h-[44px]'}`}
           >
             <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 sm:mr-2" />
             <span className="hidden sm:inline">Voltar</span>
           </Button>
           
-          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground text-center flex-1 truncate">
+          <h1 className={`font-semibold text-foreground text-center flex-1 truncate ${
+            fontSize === "text-sm" ? "text-lg" : "text-xl sm:text-2xl"
+          }`}>
             Registrar Problema
           </h1>
           
@@ -263,11 +290,11 @@ const Registrar = () => {
             
             {/* Conteúdo do formulário com scroll interno */}
             <div className={`flex-1 overflow-y-auto min-h-0 ${getSpacing()} pb-4`}>
-              {/* 1. Categoria - Altura aumentada conforme resolução */}
+              {/* 1. Categoria */}
               <Card className={`${getCardPadding()} border-border`}>
                 <div className={getSpacing()}>
                   <div className="flex items-start justify-between">
-                    <Label htmlFor="categoria" className="font-medium text-foreground text-sm sm:text-base">
+                    <Label htmlFor="categoria" className={`font-medium text-foreground ${fontSize}`}>
                       1. Tipo de Problema *
                     </Label>
                     {categoria && (
@@ -280,7 +307,7 @@ const Registrar = () => {
                   <Select value={categoria} onValueChange={setCategoria}>
                     <SelectTrigger 
                       id="categoria" 
-                      className={`${getInputHeight()} text-sm sm:text-base ${categoria ? 'border-green-500' : ''}`}
+                      className={`${getInputHeight()} ${fontSize} ${categoria ? 'border-green-500' : ''}`}
                     >
                       <SelectValue placeholder="Selecione..." />
                     </SelectTrigger>
@@ -289,7 +316,7 @@ const Registrar = () => {
                         <SelectItem 
                           key={cat} 
                           value={cat}
-                          className="text-sm sm:text-base py-2 sm:py-3"
+                          className={`${fontSize} py-2`}
                         >
                           {cat}
                         </SelectItem>
@@ -306,11 +333,11 @@ const Registrar = () => {
                 </div>
               </Card>
 
-              {/* 2. Título - Altura aumentada conforme resolução */}
+              {/* 2. Título */}
               <Card className={`${getCardPadding()} border-border`}>
                 <div className={getSpacing()}>
                   <div className="flex items-start justify-between">
-                    <Label htmlFor="titulo" className="font-medium text-foreground text-sm sm:text-base">
+                    <Label htmlFor="titulo" className={`font-medium text-foreground ${fontSize}`}>
                       2. Título do Problema *
                     </Label>
                     {titulo && (
@@ -325,7 +352,7 @@ const Registrar = () => {
                     value={titulo}
                     onChange={(e) => setTitulo(e.target.value.slice(0, 100))}
                     placeholder="Ex: Poste de luz quebrado na esquina"
-                    className={`${getInputHeight()} text-sm sm:text-base ${titulo ? 'border-green-500' : ''}`}
+                    className={`${getInputHeight()} ${fontSize} ${titulo ? 'border-green-500' : ''}`}
                     maxLength={100}
                   />
                   
@@ -337,11 +364,11 @@ const Registrar = () => {
                 </div>
               </Card>
 
-              {/* 3. Descrição - Altura aumentada conforme resolução */}
+              {/* 3. Descrição */}
               <Card className={`${getCardPadding()} border-border`}>
                 <div className={getSpacing()}>
                   <div className="flex items-start justify-between">
-                    <Label htmlFor="descricao" className="font-medium text-foreground text-sm sm:text-base">
+                    <Label htmlFor="descricao" className={`font-medium text-foreground ${fontSize}`}>
                       3. Descrição Detalhada *
                     </Label>
                     {descricao && (
@@ -356,7 +383,7 @@ const Registrar = () => {
                     value={descricao}
                     onChange={(e) => setDescricao(e.target.value.slice(0, 500))}
                     placeholder="Descreva com detalhes o problema encontrado..."
-                    className={`${getTextareaHeight()} text-sm sm:text-base resize-none ${descricao ? 'border-green-500' : ''}`}
+                    className={`${getTextareaHeight()} ${fontSize} resize-none ${descricao ? 'border-green-500' : ''}`}
                     maxLength={500}
                   />
                   
@@ -368,10 +395,10 @@ const Registrar = () => {
                 </div>
               </Card>
 
-              {/* 4. Foto (Opcional) - Altura aumentada conforme resolução */}
+              {/* 4. Foto (Opcional) */}
               <Card className={`${getCardPadding()} border-border`}>
                 <div className={getSpacing()}>
-                  <Label className="font-medium text-foreground text-sm sm:text-base">
+                  <Label className={`font-medium text-foreground ${fontSize}`}>
                     4. Foto (Opcional)
                   </Label>
                   
@@ -400,17 +427,17 @@ const Registrar = () => {
                       variant={fotoPreview ? "outline" : "default"}
                       size="sm"
                       onClick={handleFotoCapture}
-                      className={`w-full ${getButtonHeight()}`}
+                      className={`w-full ${getButtonHeight()} ${fontSize}`}
                     >
                       {fotoPreview ? (
                         <>
-                          <ImageIcon className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                          <ImageIcon className={`mr-2 ${fontSize === "text-sm" ? "h-3 w-3" : "h-4 w-4"}`} />
                           Alterar Foto
                         </>
                       ) : (
                         <>
-                          <Camera className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                          {window.innerWidth < 768 ? "Adicionar Foto" : "Adicionar Foto do Problema"}
+                          <Camera className={`mr-2 ${fontSize === "text-sm" ? "h-3 w-3" : "h-4 w-4"}`} />
+                          {isMobile ? "Adicionar Foto" : "Adicionar Foto do Problema"}
                         </>
                       )}
                     </Button>
@@ -418,11 +445,11 @@ const Registrar = () => {
                 </div>
               </Card>
 
-              {/* 5. Localização - Altura aumentada conforme resolução */}
+              {/* 5. Localização */}
               <Card className={`${getCardPadding()} border-border`}>
                 <div className={getSpacing()}>
                   <div className="flex items-start justify-between">
-                    <Label className="font-medium text-foreground text-sm sm:text-base">
+                    <Label className={`font-medium text-foreground ${fontSize}`}>
                       5. Localização *
                     </Label>
                     {localizacao && (
@@ -437,16 +464,16 @@ const Registrar = () => {
                     variant={localizacao ? "outline" : "default"}
                     size="sm"
                     onClick={handleGoToMap}
-                    className={`w-full ${getButtonHeight()} ${
+                    className={`w-full ${getButtonHeight()} ${fontSize} ${
                       localizacao 
                         ? 'border-green-500 bg-green-50 hover:bg-green-100 text-green-700' 
                         : ''
                     }`}
                   >
-                    <MapPin className={`mr-2 h-3 w-3 sm:h-4 sm:w-4 ${
+                    <MapPin className={`mr-2 ${fontSize === "text-sm" ? "h-3 w-3" : "h-4 w-4"} ${
                       localizacao ? 'text-green-600' : ''
                     }`} />
-                    <span className="text-left flex-1 truncate text-sm sm:text-base">
+                    <span className="text-left flex-1 truncate">
                       {localizacao 
                         ? "✓ Local Marcado" 
                         : "Marcar no Mapa"
@@ -455,7 +482,7 @@ const Registrar = () => {
                   </Button>
                   
                   {localizacao?.endereco && (
-                    <div className="mt-2 p-2 bg-muted/30 rounded text-xs sm:text-sm">
+                    <div className="mt-2 p-2 bg-muted/30 rounded text-xs">
                       <div className="flex items-start gap-1">
                         <MapPin className="h-3 w-3 text-green-600 flex-shrink-0 mt-0.5" />
                         <div className="flex-1 min-w-0">
@@ -474,23 +501,23 @@ const Registrar = () => {
                 </div>
               </Card>
 
-              {/* Botão de Envio - Altura aumentada conforme resolução */}
+              {/* Botão de Envio */}
               <div className="pt-2">
                 <Button
                   type="submit"
-                  size={window.innerWidth < 640 ? "sm" : "default"}
+                  size={isMobile ? "sm" : "default"}
                   disabled={criarProblema.isPending || !categoria || !titulo || !descricao || !localizacao}
-                  className={`w-full ${getButtonHeight()}`}
+                  className={`w-full ${getButtonHeight()} ${fontSize}`}
                 >
                   {criarProblema.isPending ? (
                     <span className="flex items-center gap-2">
-                      <span className="h-3 w-3 sm:h-4 sm:w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                      <span className={`${fontSize === "text-sm" ? "h-3 w-3" : "h-4 w-4"} border-2 border-white border-t-transparent rounded-full animate-spin`}></span>
                       Enviando...
                     </span>
                   ) : (
                     <>
-                      <Check className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                      {window.innerWidth < 768 ? "Enviar" : "Enviar Registro"}
+                      <Check className={`mr-2 ${fontSize === "text-sm" ? "h-3 w-3" : "h-4 w-4"}`} />
+                      {isMobile ? "Enviar" : "Enviar Registro"}
                     </>
                   )}
                 </Button>
