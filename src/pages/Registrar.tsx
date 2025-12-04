@@ -193,260 +193,265 @@ const Registrar = () => {
         </div>
       </header>
 
-      {/* Main Content - Otimizado para tablet sem scroll */}
-      <main className={`flex-1 px-4 sm:px-6 py-3 ${
-        isTablet ? 'py-2' : 'sm:py-4'
-      } overflow-y-auto`}>
-        <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
-          {/* Container principal ajustado para tablet */}
-          <div className={`space-y-4 ${
-            isTablet ? 'space-y-3' : 'sm:space-y-6'
+      {/* Main Content - OTIMIZADO PARA TABLET PREENCHER ALTURA TOTAL */}
+      <main className="flex-1 px-3 sm:px-6 md:px-8 py-3">
+        <form onSubmit={handleSubmit} className="max-w-4xl mx-auto h-full">
+          {/* Container principal que preenche altura em tablet */}
+          <div className={`h-full flex flex-col ${
+            isTablet ? 'space-y-3 justify-between' : 'space-y-4 sm:space-y-6'
           }`}>
 
-            {/* 1. Categoria */}
-            <Card className={`p-3 sm:p-4 border-border ${
-              isTablet ? 'p-3' : ''
+            {/* Conteúdo do formulário (ocupa espaço disponível) */}
+            <div className={`flex-1 ${
+              isTablet ? 'space-y-3 overflow-y-auto pr-1' : 'space-y-4 sm:space-y-6'
             }`}>
-              <div className="space-y-2">
-                <div className="flex items-start justify-between">
-                  <Label htmlFor="categoria" className={`font-medium text-foreground ${
-                    isTablet ? 'text-sm' : 'text-base sm:text-lg'
-                  }`}>
-                    1. Tipo de Problema *
-                  </Label>
-                  {categoria && (
-                    <Badge variant="outline" className="text-xs">
-                      ✓
-                    </Badge>
+              {/* 1. Categoria */}
+              <Card className={`p-3 sm:p-4 border-border ${
+                isTablet ? 'p-3' : ''
+              }`}>
+                <div className="space-y-2">
+                  <div className="flex items-start justify-between">
+                    <Label htmlFor="categoria" className={`font-medium text-foreground ${
+                      isTablet ? 'text-sm' : 'text-base sm:text-lg'
+                    }`}>
+                      1. Tipo de Problema *
+                    </Label>
+                    {categoria && (
+                      <Badge variant="outline" className="text-xs">
+                        ✓
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  <Select value={categoria} onValueChange={setCategoria}>
+                    <SelectTrigger 
+                      id="categoria" 
+                      className={`${
+                        isTablet ? 'h-10 text-sm' : 'h-12 sm:h-14 text-sm sm:text-base'
+                      } ${categoria ? 'border-green-500' : ''}`}
+                    >
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-2 z-50">
+                      {categorias.map((cat) => (
+                        <SelectItem 
+                          key={cat} 
+                          value={cat}
+                          className={`${
+                            isTablet ? 'text-sm py-2' : 'text-sm sm:text-base py-3'
+                          }`}
+                        >
+                          {cat}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  {!categoria && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      Selecione uma categoria
+                    </p>
                   )}
                 </div>
-                
-                <Select value={categoria} onValueChange={setCategoria}>
-                  <SelectTrigger 
-                    id="categoria" 
+              </Card>
+
+              {/* 2. Título */}
+              <Card className={`p-3 sm:p-4 border-border ${
+                isTablet ? 'p-3' : ''
+              }`}>
+                <div className="space-y-2">
+                  <div className="flex items-start justify-between">
+                    <Label htmlFor="titulo" className={`font-medium text-foreground ${
+                      isTablet ? 'text-sm' : 'text-base sm:text-lg'
+                    }`}>
+                      2. Título do Problema *
+                    </Label>
+                    {titulo && (
+                      <Badge variant="outline" className="text-xs">
+                        {titulo.length}/100
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  <Input
+                    id="titulo"
+                    value={titulo}
+                    onChange={(e) => setTitulo(e.target.value.slice(0, 100))}
+                    placeholder="Ex: Poste de luz quebrado na esquina"
                     className={`${
                       isTablet ? 'h-10 text-sm' : 'h-12 sm:h-14 text-sm sm:text-base'
-                    } ${categoria ? 'border-green-500' : ''}`}
-                  >
-                    <SelectValue placeholder="Selecione..." />
-                  </SelectTrigger>
-                  <SelectContent className="bg-card border-2 z-50">
-                    {categorias.map((cat) => (
-                      <SelectItem 
-                        key={cat} 
-                        value={cat}
-                        className={`${
-                          isTablet ? 'text-sm py-2' : 'text-sm sm:text-base py-3'
-                        }`}
-                      >
-                        {cat}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                
-                {!categoria && (
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    Selecione uma categoria
-                  </p>
-                )}
-              </div>
-            </Card>
-
-            {/* 2. Título */}
-            <Card className={`p-3 sm:p-4 border-border ${
-              isTablet ? 'p-3' : ''
-            }`}>
-              <div className="space-y-2">
-                <div className="flex items-start justify-between">
-                  <Label htmlFor="titulo" className={`font-medium text-foreground ${
-                    isTablet ? 'text-sm' : 'text-base sm:text-lg'
-                  }`}>
-                    2. Título do Problema *
-                  </Label>
-                  {titulo && (
-                    <Badge variant="outline" className="text-xs">
-                      {titulo.length}/100
-                    </Badge>
-                  )}
-                </div>
-                
-                <Input
-                  id="titulo"
-                  value={titulo}
-                  onChange={(e) => setTitulo(e.target.value.slice(0, 100))}
-                  placeholder="Ex: Poste de luz quebrado na esquina"
-                  className={`${
-                    isTablet ? 'h-10 text-sm' : 'h-12 sm:h-14 text-sm sm:text-base'
-                  } ${titulo ? 'border-green-500' : ''}`}
-                  maxLength={100}
-                />
-                
-                {titulo.length >= 80 && (
-                  <p className="text-xs text-yellow-600">
-                    {100 - titulo.length} caracteres restantes
-                  </p>
-                )}
-              </div>
-            </Card>
-
-            {/* 3. Descrição */}
-            <Card className={`p-3 sm:p-4 border-border ${
-              isTablet ? 'p-3' : ''
-            }`}>
-              <div className="space-y-2">
-                <div className="flex items-start justify-between">
-                  <Label htmlFor="descricao" className={`font-medium text-foreground ${
-                    isTablet ? 'text-sm' : 'text-base sm:text-lg'
-                  }`}>
-                    3. Descrição Detalhada *
-                  </Label>
-                  {descricao && (
-                    <Badge variant="outline" className="text-xs">
-                      {descricao.length}/500
-                    </Badge>
-                  )}
-                </div>
-                
-                <Textarea
-                  id="descricao"
-                  value={descricao}
-                  onChange={(e) => setDescricao(e.target.value.slice(0, 500))}
-                  placeholder="Descreva com detalhes o problema encontrado..."
-                  className={`${
-                    isTablet ? 'min-h-[80px] text-sm' : 'min-h-[100px] sm:min-h-[120px] text-sm sm:text-base'
-                  } ${descricao ? 'border-green-500' : ''}`}
-                  maxLength={500}
-                />
-                
-                {descricao.length >= 400 && (
-                  <p className="text-xs text-yellow-600">
-                    {500 - descricao.length} caracteres restantes
-                  </p>
-                )}
-              </div>
-            </Card>
-
-            {/* 4. Foto (Opcional) */}
-            <Card className={`p-3 sm:p-4 border-border ${
-              isTablet ? 'p-3' : ''
-            }`}>
-              <div className="space-y-2">
-                <Label className={`font-medium text-foreground ${
-                  isTablet ? 'text-sm' : 'text-base sm:text-lg'
-                }`}>
-                  4. Foto (Opcional)
-                </Label>
-                
-                <div className="space-y-3">
-                  {fotoPreview && (
-                    <div className="relative rounded-lg overflow-hidden border border-border">
-                      <img 
-                        src={fotoPreview} 
-                        alt="Preview" 
-                        className={`w-full ${
-                          isTablet ? 'h-32' : 'h-40 sm:h-48'
-                        } object-cover`}
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        onClick={handleRemoveFoto}
-                        className="absolute top-1 right-1 h-6 w-6 p-0 rounded-full"
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  )}
+                    } ${titulo ? 'border-green-500' : ''}`}
+                    maxLength={100}
+                  />
                   
-                  <Button
-                    type="button"
-                    variant={fotoPreview ? "outline" : "default"}
-                    size={isTablet ? "sm" : "default"}
-                    onClick={handleFotoCapture}
-                    className="w-full"
-                  >
-                    {fotoPreview ? (
-                      <>
-                        <ImageIcon className={`mr-2 ${isTablet ? 'h-3 w-3' : 'h-4 w-4'}`} />
-                        Alterar Foto
-                      </>
-                    ) : (
-                      <>
-                        <Camera className={`mr-2 ${isTablet ? 'h-3 w-3' : 'h-4 w-4'}`} />
-                        {isTablet ? "Adicionar Foto" : "Adicionar Foto do Problema"}
-                      </>
-                    )}
-                  </Button>
+                  {titulo.length >= 80 && (
+                    <p className="text-xs text-yellow-600">
+                      {100 - titulo.length} caracteres restantes
+                    </p>
+                  )}
                 </div>
-              </div>
-            </Card>
+              </Card>
 
-            {/* 5. Localização */}
-            <Card className={`p-3 sm:p-4 border-border ${
-              isTablet ? 'p-3' : ''
-            }`}>
-              <div className="space-y-2">
-                <div className="flex items-start justify-between">
+              {/* 3. Descrição */}
+              <Card className={`p-3 sm:p-4 border-border ${
+                isTablet ? 'p-3' : ''
+              }`}>
+                <div className="space-y-2">
+                  <div className="flex items-start justify-between">
+                    <Label htmlFor="descricao" className={`font-medium text-foreground ${
+                      isTablet ? 'text-sm' : 'text-base sm:text-lg'
+                    }`}>
+                      3. Descrição Detalhada *
+                    </Label>
+                    {descricao && (
+                      <Badge variant="outline" className="text-xs">
+                        {descricao.length}/500
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  <Textarea
+                    id="descricao"
+                    value={descricao}
+                    onChange={(e) => setDescricao(e.target.value.slice(0, 500))}
+                    placeholder="Descreva com detalhes o problema encontrado..."
+                    className={`${
+                      isTablet ? 'min-h-[80px] text-sm' : 'min-h-[100px] sm:min-h-[120px] text-sm sm:text-base'
+                    } ${descricao ? 'border-green-500' : ''}`}
+                    maxLength={500}
+                  />
+                  
+                  {descricao.length >= 400 && (
+                    <p className="text-xs text-yellow-600">
+                      {500 - descricao.length} caracteres restantes
+                    </p>
+                  )}
+                </div>
+              </Card>
+
+              {/* 4. Foto (Opcional) */}
+              <Card className={`p-3 sm:p-4 border-border ${
+                isTablet ? 'p-3' : ''
+              }`}>
+                <div className="space-y-2">
                   <Label className={`font-medium text-foreground ${
                     isTablet ? 'text-sm' : 'text-base sm:text-lg'
                   }`}>
-                    5. Localização *
+                    4. Foto (Opcional)
                   </Label>
-                  {localizacao && (
-                    <Badge className="bg-green-100 text-green-800 border-green-300 text-xs">
-                      ✓
-                    </Badge>
-                  )}
+                  
+                  <div className="space-y-3">
+                    {fotoPreview && (
+                      <div className="relative rounded-lg overflow-hidden border border-border">
+                        <img 
+                          src={fotoPreview} 
+                          alt="Preview" 
+                          className={`w-full ${
+                            isTablet ? 'h-32' : 'h-40 sm:h-48'
+                          } object-cover`}
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          onClick={handleRemoveFoto}
+                          className="absolute top-1 right-1 h-6 w-6 p-0 rounded-full"
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    )}
+                    
+                    <Button
+                      type="button"
+                      variant={fotoPreview ? "outline" : "default"}
+                      size={isTablet ? "sm" : "default"}
+                      onClick={handleFotoCapture}
+                      className="w-full"
+                    >
+                      {fotoPreview ? (
+                        <>
+                          <ImageIcon className={`mr-2 ${isTablet ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                          Alterar Foto
+                        </>
+                      ) : (
+                        <>
+                          <Camera className={`mr-2 ${isTablet ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                          {isTablet ? "Adicionar Foto" : "Adicionar Foto do Problema"}
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
-                
-                <Button
-                  type="button"
-                  variant={localizacao ? "outline" : "default"}
-                  size={isTablet ? "sm" : "default"}
-                  onClick={handleGoToMap}
-                  className={`w-full ${
-                    isTablet ? 'h-10' : 'h-12 sm:h-14'
-                  } ${localizacao 
-                    ? 'border-green-500 bg-green-50 hover:bg-green-100 text-green-700' 
-                    : ''
-                  }`}
-                >
-                  <MapPin className={`mr-2 ${
-                    isTablet ? 'h-3 w-3' : 'h-4 w-4'
-                  } ${localizacao ? 'text-green-600' : ''}`} />
-                  <span className="text-left flex-1 truncate">
-                    {localizacao 
-                      ? "✓ Local Marcado" 
-                      : "Marcar no Mapa"
-                    }
-                  </span>
-                </Button>
-                
-                {localizacao?.endereco && (
-                  <div className="mt-2 p-2 bg-muted/30 rounded text-xs">
-                    <div className="flex items-start gap-1">
-                      <MapPin className="h-3 w-3 text-green-600 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{localizacao.endereco}</p>
+              </Card>
+
+              {/* 5. Localização */}
+              <Card className={`p-3 sm:p-4 border-border ${
+                isTablet ? 'p-3' : ''
+              }`}>
+                <div className="space-y-2">
+                  <div className="flex items-start justify-between">
+                    <Label className={`font-medium text-foreground ${
+                      isTablet ? 'text-sm' : 'text-base sm:text-lg'
+                    }`}>
+                      5. Localização *
+                    </Label>
+                    {localizacao && (
+                      <Badge className="bg-green-100 text-green-800 border-green-300 text-xs">
+                        ✓
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  <Button
+                    type="button"
+                    variant={localizacao ? "outline" : "default"}
+                    size={isTablet ? "sm" : "default"}
+                    onClick={handleGoToMap}
+                    className={`w-full ${
+                      isTablet ? 'h-10' : 'h-12 sm:h-14'
+                    } ${localizacao 
+                      ? 'border-green-500 bg-green-50 hover:bg-green-100 text-green-700' 
+                      : ''
+                    }`}
+                  >
+                    <MapPin className={`mr-2 ${
+                      isTablet ? 'h-3 w-3' : 'h-4 w-4'
+                    } ${localizacao ? 'text-green-600' : ''}`} />
+                    <span className="text-left flex-1 truncate">
+                      {localizacao 
+                        ? "✓ Local Marcado" 
+                        : "Marcar no Mapa"
+                      }
+                    </span>
+                  </Button>
+                  
+                  {localizacao?.endereco && (
+                    <div className="mt-2 p-2 bg-muted/30 rounded text-xs">
+                      <div className="flex items-start gap-1">
+                        <MapPin className="h-3 w-3 text-green-600 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{localizacao.endereco}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
-                
-                {!localizacao && (
-                  <p className="text-xs text-red-600 flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    Marque a localização no mapa
-                  </p>
-                )}
-              </div>
-            </Card>
+                  )}
+                  
+                  {!localizacao && (
+                    <p className="text-xs text-red-600 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      Marque a localização no mapa
+                    </p>
+                  )}
+                </div>
+              </Card>
+            </div>
 
-            {/* Botão de Envio */}
-            <div className="pt-3">
+            {/* Botão de Envio (fixo na parte inferior em tablet) */}
+            <div className={`pt-3 ${
+              isTablet ? 'sticky bottom-0 bg-background/95 backdrop-blur-sm pb-3 -mx-3 sm:-mx-6 md:-mx-8 px-3 sm:px-6 md:px-8' : ''
+            }`}>
               <Button
                 type="submit"
                 size={isTablet ? "sm" : "default"}
