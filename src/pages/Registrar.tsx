@@ -194,14 +194,14 @@ const Registrar = () => {
         </div>
       </header>
 
-      {/* Main Content - USANDO ALTURA TOTAL SEM SCROLL */}
-      <main className="flex-1 flex flex-col px-4 sm:px-6 md:px-8">
-        <form onSubmit={handleSubmit} className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
+      {/* Main Content - Ocupa toda a altura sem botão fixo */}
+      <main className="flex-1 flex flex-col min-h-0">
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
           {/* Container principal que preenche altura total */}
-          <div className="flex-1 flex flex-col py-3 sm:py-4">
+          <div className="flex-1 flex flex-col min-h-0 px-4 sm:px-6 md:px-8 py-3 sm:py-4">
             
-            {/* Conteúdo do formulário (ocupa espaço disponível com scroll interno) */}
-            <div className="flex-1 overflow-y-auto pr-1 space-y-3 sm:space-y-4">
+            {/* Conteúdo do formulário com scroll interno */}
+            <div className="flex-1 overflow-y-auto min-h-0 space-y-3 sm:space-y-4 pb-3 sm:pb-4">
               {/* 1. Categoria */}
               <Card className="p-3 sm:p-4 border-border">
                 <div className="space-y-2">
@@ -412,28 +412,28 @@ const Registrar = () => {
                   )}
                 </div>
               </Card>
-            </div>
 
-            {/* Botão de Envio (fixo na parte inferior) */}
-            <div className="pt-3 sm:pt-4 sticky bottom-0 bg-background/95 backdrop-blur-sm pb-3">
-              <Button
-                type="submit"
-                size={isMobile ? "sm" : "default"}
-                disabled={criarProblema.isPending || !categoria || !titulo || !descricao || !localizacao}
-                className="w-full h-10 sm:h-12"
-              >
-                {criarProblema.isPending ? (
-                  <span className="flex items-center gap-2">
-                    <span className="h-3 w-3 sm:h-4 sm:w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                    Enviando...
-                  </span>
-                ) : (
-                  <>
-                    <Check className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                    {isMobile ? "Enviar" : "Enviar Registro"}
-                  </>
-                )}
-              </Button>
+              {/* Botão de Envio (parte do fluxo normal) */}
+              <div className="pt-1">
+                <Button
+                  type="submit"
+                  size={isMobile ? "sm" : "default"}
+                  disabled={criarProblema.isPending || !categoria || !titulo || !descricao || !localizacao}
+                  className="w-full h-10 sm:h-12"
+                >
+                  {criarProblema.isPending ? (
+                    <span className="flex items-center gap-2">
+                      <span className="h-3 w-3 sm:h-4 sm:w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                      Enviando...
+                    </span>
+                  ) : (
+                    <>
+                      <Check className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                      {isMobile ? "Enviar" : "Enviar Registro"}
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
         </form>
