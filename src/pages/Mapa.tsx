@@ -1,12 +1,16 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, MapPin, Check, X, Lightbulb, Trash2, Construction, Trees, School, Shield } from "lucide-react";
+import { ArrowLeft, MapPin, Check, X, Lightbulb, Trash2, Construction, Trees, School, Shield, Search, Menu, ZoomIn, ZoomOut, Locate, Maximize, Minimize } from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useProblemas } from "@/hooks/useProblemas";
+import { debounce } from "lodash";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Drawer, DrawerContent, DrawerTrigger, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 
 // Coordenadas de Recife
 const RECIFE_LAT = -8.0301;
@@ -24,8 +28,8 @@ const getCategoriaColor = (categoria: string) => {
   return colorMap[categoria] || "bg-gray-500";
 };
 
-// Ícone customizado para cada categoria
-const createCustomIcon = (categoria: string) => {
+// Ícone customizado para cada categoria (responsivo)
+const createCustomIcon = (categoria: string, isMobile: boolean = false) => {
   const colorMap: Record<string, string> = {
     "Iluminação pública": "#eab308",
     "Limpeza urbana": "#22c55e",
@@ -36,45 +40,39 @@ const createCustomIcon = (categoria: string) => {
   };
 
   const color = colorMap[categoria] || "#6b7280";
+  const size = isMobile ? 24 : 32;
+  const innerSize = isMobile ? 8 : 12;
 
   return L.divIcon({
     className: "custom-marker",
-    html: `<div style="background-color: ${color}; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
-      <div style="width: 12px; height: 12px; background: white; border-radius: 50%;"></div>
+    html: `<div style="background-color: ${color}; width: ${size}px; height: ${size}px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center;">
+      <div style="width: ${innerSize}px; height: ${innerSize}px; background: white; border-radius: 50%;"></div>
     </div>`,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-    popupAnchor: [0, -16],
+    iconSize: [size, size],
+    iconAnchor: [size/2, size/2],
+    popupAnchor: [0, -size/2],
   });
 };
 
-// Ícone para nova localização
-const newLocationIcon = L.divIcon({
-  className: "new-location-marker",
-  html: `<div style="color: hsl(var(--primary)); filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));">
-    <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
-      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-      <circle cx="12" cy="10" r="3" fill="white"></circle>
-    </svg>
-  </div>`,
-  iconSize: [40, 40],
-  iconAnchor: [20, 40],
-  popupAnchor: [0, -40],
-});
-
-const getCategoriaIcon = (categoria: string) => {
-  const iconMap: Record<string, any> = {
-    "Iluminação pública": Lightbulb,
-    "Limpeza urbana": Trash2,
-    "Buraco na rua": Construction,
-    "Áreas verdes / praças": Trees,
-    "Escola / creche": School,
-    "Segurança": Shield,
-  };
-  return iconMap[categoria] || MapPin;
+// Ícone para nova localização (responsivo)
+const createNewLocationIcon = (isMobile: boolean = false) => {
+  const size = isMobile ? 32 : 40;
+  
+  return L.divIcon({
+    className: "new-location-marker",
+    html: `<div style="color: hsl(var(--primary)); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
+      <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+        <circle cx="12" cy="10" r="3" fill="white"></circle>
+      </svg>
+    </div>`,
+    iconSize: [size, size],
+    iconAnchor: [size/2, size],
+    popupAnchor: [0, -size],
+  });
 };
 
-// Função para fazer reverse geocoding usando Nominatim (OpenStreetMap)
+// Função para fazer reverse geocoding usando Nominatim
 const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
   try {
     const response = await fetch(
@@ -82,6 +80,7 @@ const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
       {
         headers: {
           'Accept-Language': 'pt-BR',
+          'User-Agent': 'SuaAplicacao/1.0'
         }
       }
     );
@@ -99,6 +98,67 @@ const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
   }
 };
 
+// Função para buscar autocomplete usando Nominatim
+const searchAddress = async (query: string): Promise<SearchResult[]> => {
+  if (!query || query.length < 3) return [];
+
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1&viewbox=-35.2,-8.2,-34.6,-7.9&bounded=1&countrycodes=br&accept-language=pt-BR`,
+      {
+        headers: {
+          'User-Agent': 'SuaAplicacao/1.0'
+        }
+      }
+    );
+    
+    if (!response.ok) throw new Error('Falha na busca');
+    
+    const data: SearchResult[] = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Erro no autocomplete:", error);
+    return [];
+  }
+};
+
+// Hook personalizado para detectar tamanho da tela
+const useResponsive = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const width = window.innerWidth;
+      setIsMobile(width < 768);
+      setIsTablet(width >= 768 && width < 1024);
+      setIsDesktop(width >= 1024);
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+
+  return { isMobile, isTablet, isDesktop };
+};
+
+interface SearchResult {
+  display_name: string;
+  lat: string;
+  lon: string;
+  type: string;
+  importance: number;
+  address?: {
+    road?: string;
+    suburb?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+  };
+}
+
 const Mapa = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -106,102 +166,297 @@ const Mapa = () => {
   const [address, setAddress] = useState<string>("");
   const [loadingAddress, setLoadingAddress] = useState(false);
   const { data: problemas = [], isLoading } = useProblemas();
+  const { isMobile, isTablet, isDesktop } = useResponsive();
+
+  // Estados para a barra de pesquisa
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showLegend, setShowLegend] = useState(false);
 
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const newLocationMarkerRef = useRef<L.Marker | null>(null);
   const problemMarkersRef = useRef<L.Marker[]>([]);
+  const searchMarkerRef = useRef<L.Marker | null>(null);
 
-  // Pegar parâmetros de URL para centralizar em um problema específico
+  // Pegar parâmetros de URL
   const focusLat = searchParams.get('lat');
   const focusLng = searchParams.get('lng');
   const focusId = searchParams.get('id');
 
+  // Função debounced para busca
+  const debouncedSearch = useCallback(
+    debounce(async (query: string) => {
+      if (query.length < 3) {
+        setSearchResults([]);
+        setIsSearching(false);
+        return;
+      }
+
+      setIsSearching(true);
+      const results = await searchAddress(query);
+      setSearchResults(results);
+      setIsSearching(false);
+      setShowResults(true);
+    }, 300),
+    []
+  );
+
+  // Efeito para buscar quando a query mudar
+  useEffect(() => {
+    debouncedSearch(searchQuery);
+    return () => debouncedSearch.cancel();
+  }, [searchQuery, debouncedSearch]);
+
+  // Função para centralizar em Recife
+  const centerOnRecife = () => {
+    if (mapRef.current) {
+      mapRef.current.setView([RECIFE_LAT, RECIFE_LNG], isMobile ? 13 : 14);
+      toast.success("Mapa centralizado em Recife");
+    }
+  };
+
+  // Função para localizar usuário
+  const locateUser = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          if (mapRef.current) {
+            mapRef.current.setView([latitude, longitude], 16);
+            toast.success("Localização encontrada!");
+          }
+        },
+        (error) => {
+          console.error("Erro ao obter localização:", error);
+          toast.error("Não foi possível obter sua localização");
+        }
+      );
+    } else {
+      toast.error("Geolocalização não suportada pelo navegador");
+    }
+  };
+
+  // Função para lidar com seleção de um resultado
+  const handleSelectResult = async (result: SearchResult) => {
+    const lat = parseFloat(result.lat);
+    const lng = parseFloat(result.lon);
+    
+    if (mapRef.current) {
+      const zoomLevel = isMobile ? 16 : 17;
+      mapRef.current.setView([lat, lng], zoomLevel);
+      
+      if (searchMarkerRef.current) {
+        mapRef.current.removeLayer(searchMarkerRef.current);
+      }
+      
+      const marker = L.marker([lat, lng], {
+        icon: L.divIcon({
+          className: 'search-marker',
+          html: `<div style="background-color: #3b82f6; width: ${isMobile ? '20px' : '24px'}; height: ${isMobile ? '20px' : '24px'}; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></div>`,
+          iconSize: isMobile ? [20, 20] : [24, 24],
+          iconAnchor: isMobile ? [10, 10] : [12, 12],
+        })
+      }).addTo(mapRef.current);
+      
+      searchMarkerRef.current = marker;
+      
+      const popupContent = `
+        <div style="padding: ${isMobile ? '6px' : '8px'}; max-width: ${isMobile ? '200px' : '250px'};">
+          <p style="font-weight: 600; font-size: ${isMobile ? '12px' : '14px'}; margin-bottom: 4px; color: #3b82f6;">
+            📍 ${result.display_name.split(',')[0]}
+          </p>
+          <p style="font-size: ${isMobile ? '11px' : '12px'}; color: #4b5563;">
+            ${result.display_name.split(',').slice(1, 3).join(',').trim()}
+          </p>
+          <p style="font-size: ${isMobile ? '10px' : '11px'}; color: #9ca3af; margin-top: 4px;">
+            Clique no mapa para selecionar
+          </p>
+        </div>
+      `;
+      
+      marker.bindPopup(popupContent).openPopup();
+      
+      setSearchQuery(result.display_name);
+      setSearchResults([]);
+      setShowResults(false);
+      
+      toast.success("Localização encontrada!");
+    }
+  };
+
+  // Função para limpar a busca
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setSearchResults([]);
+    setShowResults(false);
+    
+    if (searchMarkerRef.current && mapRef.current) {
+      mapRef.current.removeLayer(searchMarkerRef.current);
+      searchMarkerRef.current = null;
+    }
+  };
+
+  // Toggle tela cheia
+  const toggleFullscreen = () => {
+    if (!mapContainerRef.current) return;
+    
+    if (!isFullscreen) {
+      if (mapContainerRef.current.requestFullscreen) {
+        mapContainerRef.current.requestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+    setIsFullscreen(!isFullscreen);
+  };
+
+  // Efeito para detectar saída do fullscreen
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  // Efeito inicial do mapa
   useEffect(() => {
     if (mapRef.current || !mapContainerRef.current) return;
 
-    // Determinar centro inicial
     const initialLat = focusLat ? parseFloat(focusLat) : RECIFE_LAT;
     const initialLng = focusLng ? parseFloat(focusLng) : RECIFE_LNG;
-    const initialZoom = focusLat && focusLng ? 13 : 14;
+    const initialZoom = focusLat && focusLng ? (isMobile ? 15 : 16) : (isMobile ? 13 : 14);
 
-    // Inicializa o mapa Leaflet centralizado em Recife
     const map = L.map(mapContainerRef.current, {
       center: [initialLat, initialLng],
       zoom: initialZoom,
-      zoomControl: true,
+      zoomControl: false, // Vamos adicionar controles customizados
+      attributionControl: true,
+      dragging: !isMobile, // Melhor experiência em mobile
+      tap: isMobile, // Suporte a toque
+      touchZoom: isMobile,
+      scrollWheelZoom: !isMobile, // Desabilita zoom com scroll no mobile
     });
 
     mapRef.current = map;
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    // Adicionar controles de zoom customizados
+    L.control.zoom({
+      position: isMobile ? 'bottomright' : 'topright'
     }).addTo(map);
 
+    // Adicionar camada do mapa
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19,
+      minZoom: 10,
+    }).addTo(map);
 
     // Clique no mapa para selecionar nova localização
-    map.on("click", async (e: L.LeafletMouseEvent) => {
+    const handleMapClick = async (e: L.LeafletMouseEvent) => {
       const { lat, lng } = e.latlng;
       setSelectedLocation({ lat, lng });
       setLoadingAddress(true);
+
+      if (searchMarkerRef.current) {
+        map.removeLayer(searchMarkerRef.current);
+        searchMarkerRef.current = null;
+      }
 
       if (newLocationMarkerRef.current) {
         map.removeLayer(newLocationMarkerRef.current);
       }
 
-      const marker = L.marker([lat, lng], { icon: newLocationIcon }).addTo(map);
+      const marker = L.marker([lat, lng], { 
+        icon: createNewLocationIcon(isMobile) 
+      }).addTo(map);
+      
       newLocationMarkerRef.current = marker;
 
-      // Fazer reverse geocoding para obter endereço
       const endereco = await reverseGeocode(lat, lng);
       setAddress(endereco);
       setLoadingAddress(false);
 
       marker.bindPopup(
-        `<div style="padding: 4px 2px; text-align: center; max-width: 250px;">
-          <p style="font-weight: 600; font-size: 13px; margin-bottom: 4px;">📍 Nova Localização</p>
-          <p style="font-size: 11px; color: #4b5563; margin-bottom: 4px;">${endereco}</p>
-          <p style="font-size: 10px; color: #9ca3af;">Clique em "Confirmar" para continuar</p>
+        `<div style="padding: 4px 2px; text-align: center; max-width: ${isMobile ? '180px' : '250px'};">
+          <p style="font-weight: 600; font-size: ${isMobile ? '12px' : '13px'}; margin-bottom: 4px;">📍 Nova Localização</p>
+          <p style="font-size: ${isMobile ? '10px' : '11px'}; color: #4b5563; margin-bottom: 4px; word-wrap: break-word;">${endereco}</p>
+          <p style="font-size: ${isMobile ? '9px' : '10px'}; color: #9ca3af;">Clique em "Confirmar" para continuar</p>
         </div>`
       );
-      marker.openPopup();
+      
+      if (isDesktop) {
+        marker.openPopup();
+      }
 
       toast.success("Localização marcada no mapa!");
-    });
+    };
+
+    map.on("click", handleMapClick);
+
+    // Adicionar botão de localização customizado
+    const locateControl = L.control({ position: 'topleft' });
+    locateControl.onAdd = () => {
+      const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+      div.innerHTML = `
+        <a href="#" title="Minha Localização" style="display: flex; align-items: center; justify-content: center; width: ${isMobile ? '36px' : '44px'}; height: ${isMobile ? '36px' : '44px'}; background: white; border-radius: 4px; border: 2px solid rgba(0,0,0,0.2);">
+          <svg width="${isMobile ? '20' : '24'}" height="${isMobile ? '20' : '24'}" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2">
+            <path d="M12 22c-3.04 0-5.5-2.46-5.5-5.5S8.96 11 12 11s5.5 2.46 5.5 5.5S15.04 22 12 22z"/>
+            <path d="M12 8V3M8 12H3M12 16v5M16 12h5"/>
+          </svg>
+        </a>
+      `;
+      
+      L.DomEvent.on(div, 'click', function(e) {
+        L.DomEvent.stopPropagation(e);
+        L.DomEvent.preventDefault(e);
+        locateUser();
+      });
+      
+      return div;
+    };
+    locateControl.addTo(map);
 
     return () => {
+      map.off("click", handleMapClick);
       map.remove();
       mapRef.current = null;
     };
-  }, [focusLat, focusLng]);
+  }, [focusLat, focusLng, isMobile]);
 
-  // Adicionar marcadores dos problemas quando os dados forem carregados
+  // Adicionar marcadores dos problemas
   useEffect(() => {
     if (!mapRef.current || isLoading || problemas.length === 0) return;
 
     const map = mapRef.current;
 
-    // Limpar marcadores anteriores
     problemMarkersRef.current.forEach((marker) => map.removeLayer(marker));
     problemMarkersRef.current = [];
 
-    // Adicionar novos marcadores
     problemas.forEach((problema) => {
       const marker = L.marker([problema.latitude, problema.longitude], {
-        icon: createCustomIcon(problema.categoria),
+        icon: createCustomIcon(problema.categoria, isMobile),
       }).addTo(map);
 
       const popupContent = `
-        <div style="padding: 4px 2px; max-width: 220px;">
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-            <div style="background: #00000022; border-radius: 999px; padding: 4px; display: flex; align-items: center; justify-content: center;">
-              <span style="font-size: 12px;">•</span>
+        <div style="padding: 4px 2px; max-width: ${isMobile ? '180px' : '220px'};">
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+            <div style="background: #00000022; border-radius: 999px; padding: 3px; display: flex; align-items: center; justify-content: center;">
+              <span style="font-size: ${isMobile ? '10px' : '12px'};">•</span>
             </div>
-            <span style="font-weight: 600; font-size: 13px;">${problema.titulo}</span>
+            <span style="font-weight: 600; font-size: ${isMobile ? '12px' : '13px'};">${problema.titulo}</span>
           </div>
-          <span style="font-size: 11px; color: #4b5563;">${problema.categoria}</span>
-          <div style="margin-top: 4px; font-size: 11px; color: #6b7280;">
+          <span style="font-size: ${isMobile ? '10px' : '11px'}; color: #4b5563;">${problema.categoria}</span>
+          <div style="margin-top: 4px; font-size: ${isMobile ? '10px' : '11px'}; color: #6b7280;">
             <span>Status: ${problema.status}</span>
           </div>
         </div>
@@ -209,23 +464,31 @@ const Mapa = () => {
 
       marker.bindPopup(popupContent);
 
-      // Se este é o problema focado, abrir popup
       if (focusId && problema.id === focusId) {
         marker.openPopup();
       }
 
-      marker.on("mouseover", function () {
-        this.openPopup();
-      });
-      marker.on("mouseout", function () {
-        if (focusId !== problema.id) {
-          this.closePopup();
+      // Em mobile, só abre popup no clique
+      if (!isMobile) {
+        marker.on("mouseover", function () {
+          this.openPopup();
+        });
+        marker.on("mouseout", function () {
+          if (focusId !== problema.id) {
+            this.closePopup();
+          }
+        });
+      }
+
+      marker.on("click", function () {
+        if (isMobile) {
+          this.openPopup();
         }
       });
 
       problemMarkersRef.current.push(marker);
     });
-  }, [problemas, isLoading, focusId]);
+  }, [problemas, isLoading, focusId, isMobile]);
 
   const handleConfirm = () => {
     if (selectedLocation) {
@@ -248,117 +511,343 @@ const Mapa = () => {
     setAddress("");
   };
 
+  // Efeito para fechar resultados quando clicar fora
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setShowResults(false);
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, []);
+
+  // Conteúdo da legenda
+  const LegendContent = () => (
+    <div className="space-y-4">
+      <h2 className="text-lg font-semibold text-foreground">
+        Legenda de Categorias
+      </h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {[
+          { categoria: "Iluminação pública", icon: Lightbulb },
+          { categoria: "Limpeza urbana", icon: Trash2 },
+          { categoria: "Buraco na rua", icon: Construction },
+          { categoria: "Áreas verdes / praças", icon: Trees },
+          { categoria: "Escola / creche", icon: School },
+          { categoria: "Segurança", icon: Shield },
+        ].map((item) => {
+          const Icon = item.icon;
+          return (
+            <div key={item.categoria} className="flex items-center gap-3">
+              <div className={`${getCategoriaColor(item.categoria)} rounded-full p-2`}>
+                <Icon className="h-4 w-4 text-white" />
+              </div>
+              <span className="text-sm">{item.categoria}</span>
+            </div>
+          );
+        })}
+      </div>
+      <div className="pt-4 border-t">
+        <p className="text-sm text-muted-foreground">
+          <strong>Como usar:</strong>
+        </p>
+        <ul className="text-sm text-muted-foreground space-y-1 mt-2">
+          <li>• Toque/clique no mapa para marcar um local</li>
+          <li>• Digite na busca para encontrar endereços</li>
+          <li>• Use os botões para navegar pelo mapa</li>
+          <li>• Confirme a localização para registrar um problema</li>
+        </ul>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="border-b border-border bg-card px-4 sm:px-8 md:px-12 py-4 sm:py-6">
+      <header className="border-b border-border bg-card px-4 py-3 sm:px-6 sm:py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
           <Button
             variant="ghost"
-            size="default"
+            size={isMobile ? "sm" : "default"}
             onClick={() => navigate(-1)}
-            className="min-h-[44px]"
+            className="min-h-[40px] sm:min-h-[44px]"
           >
-            <ArrowLeft className="h-5 w-5 sm:mr-2" />
+            <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 sm:mr-2" />
             <span className="hidden sm:inline">Voltar</span>
           </Button>
-          <h1 className="text-lg sm:text-2xl md:text-3xl font-semibold text-foreground text-center flex-1">
-            Mapa
+          
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground text-center flex-1 truncate">
+            Mapa de Problemas
           </h1>
-          <div className="w-[60px] sm:w-32" />
+          
+          {/* Botão de legenda para mobile/tablet */}
+          {(isMobile || isTablet) ? (
+            <Sheet open={showLegend} onOpenChange={setShowLegend}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="min-h-[40px]"
+                >
+                  <Menu className="h-4 w-4" />
+                  <span className="sr-only sm:not-sr-only sm:ml-2">Legenda</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side={isMobile ? "bottom" : "right"} className={isMobile ? "h-[80vh]" : ""}>
+                <SheetHeader>
+                  <SheetTitle>Legenda e Instruções</SheetTitle>
+                </SheetHeader>
+                <div className="mt-6">
+                  <LegendContent />
+                </div>
+              </SheetContent>
+            </Sheet>
+          ) : (
+            <div className="w-24" /> // Espaçamento para desktop
+          )}
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 px-4 sm:px-8 md:px-12 py-4 sm:py-6 md:py-8">
-        <div className="max-w-7xl mx-auto h-full flex flex-col gap-6">
-
+      <main className="flex-1 px-3 sm:px-6 md:px-8 py-3 sm:py-4 md:py-6">
+        <div className="max-w-7xl mx-auto h-full flex flex-col gap-4 sm:gap-6">
           {/* 🔍 Barra de Pesquisa */}
-          <div className="w-full">
-            <input
-              type="text"
-              placeholder="Buscar endereço..."
-              className="w-full p-3 rounded-xl border border-border text-sm shadow-sm"
-            />
+          <div className="relative w-full">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder={isMobile ? "Buscar endereço..." : "Digite um endereço para buscar (mínimo 3 caracteres)..."}
+                className="w-full pl-10 pr-10 py-4 sm:py-5 rounded-lg sm:rounded-xl border border-border text-sm shadow-sm"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowResults(true);
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (searchResults.length > 0) {
+                    setShowResults(true);
+                  }
+                }}
+              />
+              {searchQuery && (
+                <button
+                  onClick={handleClearSearch}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Dropdown de resultados */}
+            {showResults && (searchResults.length > 0 || isSearching) && (
+              <div 
+                className="absolute z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {isSearching ? (
+                  <div className="p-4 text-center text-sm text-muted-foreground">
+                    Buscando...
+                  </div>
+                ) : (
+                  <>
+                    {searchResults.map((result, index) => (
+                      <button
+                        key={`${result.lat}-${result.lon}-${index}`}
+                        className="w-full text-left p-3 hover:bg-accent transition-colors border-b border-border last:border-b-0"
+                        onClick={() => handleSelectResult(result)}
+                      >
+                        <div className="flex items-start gap-2">
+                          <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm text-foreground truncate">
+                              {result.display_name.split(',')[0]}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {result.display_name.split(',').slice(1, 3).join(',').trim()}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded-full">
+                                {result.type}
+                              </span>
+                              {!isMobile && (
+                                <span className="text-xs text-muted-foreground">
+                                  Relevância: {(result.importance * 100).toFixed(0)}%
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                    {!isMobile && (
+                      <div className="p-2 border-t border-border text-center">
+                        <p className="text-xs text-muted-foreground">
+                          Dados fornecidos por OpenStreetMap
+                        </p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* 🌍 Mapa Tela Cheia */}
-          <div className="relative w-full h-[75vh] sm:h-[78vh] md:h-[80vh] rounded-xl overflow-hidden shadow-lg border-2 border-border">
-            <div ref={mapContainerRef} className="w-full h-full" />
+          {/* 🌍 Container do Mapa com Controles */}
+          <div className="relative w-full rounded-lg sm:rounded-xl overflow-hidden shadow-lg border border-border">
+            <div 
+              ref={mapContainerRef} 
+              className="w-full h-[60vh] sm:h-[65vh] md:h-[70vh]"
+            />
+            
+            {/* Controles customizados para mobile */}
+            {isMobile && (
+              <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-[1000]">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="h-10 w-10 p-0 rounded-full shadow-lg"
+                  onClick={centerOnRecife}
+                  title="Centralizar em Recife"
+                >
+                  <ZoomIn className="h-5 w-5" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="h-10 w-10 p-0 rounded-full shadow-lg"
+                  onClick={locateUser}
+                  title="Minha localização"
+                >
+                  <Locate className="h-5 w-5" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="h-10 w-10 p-0 rounded-full shadow-lg"
+                  onClick={toggleFullscreen}
+                  title={isFullscreen ? "Sair da tela cheia" : "Tela cheia"}
+                >
+                  {isFullscreen ? (
+                    <Minimize className="h-5 w-5" />
+                  ) : (
+                    <Maximize className="h-5 w-5" />
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* 📍 Info da Localização */}
           {selectedLocation && (
-            <Card className="p-4 bg-primary/5 border-primary/20">
+            <Card className="p-3 sm:p-4 bg-primary/5 border-primary/20">
               <div className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm sm:text-base text-foreground">
+                  <p className="font-medium text-sm text-foreground">
                     Localização selecionada
                   </p>
                   {loadingAddress ? (
-                    <p className="text-xs text-muted-foreground">Buscando endereço...</p>
+                    <p className="text-xs text-muted-foreground mt-1">Buscando endereço...</p>
                   ) : (
-                    <p className="text-xs text-muted-foreground break-words">{address}</p>
+                    <p className="text-xs text-muted-foreground mt-1 break-words">{address}</p>
                   )}
                 </div>
               </div>
             </Card>
           )}
 
-          {/* 🟦 Botões */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          {/* 🟦 Botões de Ação */}
+          <div className="flex flex-col sm:flex-row gap-3">
             <Button
               variant="outline"
-              size="lg"
+              size={isMobile ? "default" : "lg"}
               onClick={handleCancel}
-              className="flex-1 border-2 min-h-[52px]"
+              className="flex-1 border-2 min-h-[48px] sm:min-h-[52px]"
               disabled={!selectedLocation}
             >
-              <X className="mr-2 h-5 w-5" />
+              <X className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
               Cancelar
             </Button>
 
             <Button
-              size="lg"
+              size={isMobile ? "default" : "lg"}
               onClick={handleConfirm}
-              className="flex-1 bg-green-600 hover:bg-green-700 min-h-[52px]"
+              className="flex-1 bg-green-600 hover:bg-green-700 min-h-[48px] sm:min-h-[52px]"
               disabled={!selectedLocation}
             >
-              <Check className="mr-2 h-5 w-5" />
+              <Check className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
               Confirmar Localização
             </Button>
           </div>
 
-          {/* 🟪 Legenda Abaixo */}
-          <Card className="p-4 sm:p-6 bg-card">
-            <h2 className="text-base sm:text-lg font-semibold text-foreground mb-4">
-              Legenda de Categorias
-            </h2>
+          {/* 🟪 Legenda (apenas desktop) */}
+          {isDesktop && (
+            <Card className="p-4 md:p-6 bg-card">
+              <LegendContent />
+            </Card>
+          )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {[
-                { categoria: "Iluminação pública", icon: Lightbulb },
-                { categoria: "Limpeza urbana", icon: Trash2 },
-                { categoria: "Buraco na rua", icon: Construction },
-                { categoria: "Áreas verdes / praças", icon: Trees },
-                { categoria: "Escola / creche", icon: School },
-                { categoria: "Segurança", icon: Shield },
-              ].map((item) => {
-                const Icon = item.icon;
-                return (
-                  <div key={item.categoria} className="flex items-center gap-3">
-                    <div className={`${getCategoriaColor(item.categoria)} rounded-full p-2`}>
-                      <Icon className="h-4 w-4 text-white" />
-                    </div>
-                    <span className="text-sm">{item.categoria}</span>
-                  </div>
-                );
-              })}
+          {/* Dicas para mobile */}
+          {isMobile && (
+            <div className="bg-muted/50 p-3 rounded-lg">
+              <p className="text-xs text-muted-foreground text-center">
+                💡 <strong>Dica:</strong> Toque no mapa para marcar um local ou use a busca acima.
+              </p>
             </div>
-          </Card>
+          )}
         </div>
       </main>
+
+      {/* Footer para mobile */}
+      {isMobile && (
+        <footer className="border-t border-border bg-card p-3">
+          <div className="flex justify-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={centerOnRecife}
+              className="text-xs"
+            >
+              <ZoomIn className="h-3 w-3 mr-1" />
+              Recife
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={locateUser}
+              className="text-xs"
+            >
+              <Locate className="h-3 w-3 mr-1" />
+              Localizar
+            </Button>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs"
+                >
+                  <Menu className="h-3 w-3 mr-1" />
+                  Ajuda
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="h-[70vh]">
+                <SheetHeader>
+                  <SheetTitle>Ajuda e Legenda</SheetTitle>
+                </SheetHeader>
+                <div className="mt-6">
+                  <LegendContent />
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </footer>
+      )}
     </div>
   );
 };
