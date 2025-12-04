@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, MapPin, Check, X, Lightbulb, Trash2, Construction, Trees, School, Shield, Search, Locate, Maximize, Minimize, ZoomIn } from "lucide-react";
+import { ArrowLeft, MapPin, Check, X, Lightbulb, Trash2, Construction, Trees, School, Shield, Search, Locate, ZoomIn } from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -149,7 +149,6 @@ const Mapa = () => {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -287,34 +286,6 @@ const Mapa = () => {
       searchMarkerRef.current = null;
     }
   };
-
-  // Toggle tela cheia
-  const toggleFullscreen = () => {
-    if (!mapContainerRef.current) return;
-    
-    if (!isFullscreen) {
-      if (mapContainerRef.current.requestFullscreen) {
-        mapContainerRef.current.requestFullscreen();
-      }
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      }
-    }
-    setIsFullscreen(!isFullscreen);
-  };
-
-  // Efeito para detectar saída do fullscreen
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-    };
-  }, []);
 
   // Efeito inicial do mapa
   useEffect(() => {
@@ -577,29 +548,51 @@ const Mapa = () => {
             Mapa
           </h1>
           
-          {/* Botão de tela cheia para mobile */}
-          {isMobile && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleFullscreen}
-              className="min-h-[40px]"
-              title={isFullscreen ? "Sair da tela cheia" : "Tela cheia"}
-            >
-              {isFullscreen ? (
-                <Minimize className="h-4 w-4" />
-              ) : (
-                <Maximize className="h-4 w-4" />
-              )}
-            </Button>
-          )}
+          {/* Espaçador para alinhamento */}
+          <div className="w-12" />
         </div>
       </header>
 
       {/* Main Content */}
       <main className="flex-1 px-3 sm:px-6 md:px-8 py-3 sm:py-4 md:py-6">
         <div className="max-w-7xl mx-auto h-full flex flex-col gap-4 sm:gap-6">
-          {/* 🔍 Barra de Pesquisa */}
+          {/* 🌍 Container do Mapa */}
+          <div className="relative w-full rounded-lg overflow-hidden shadow-lg border border-border">
+            <div 
+              ref={mapContainerRef} 
+              className={`w-full ${
+                isMobile ? 'h-[55vh]' : 
+                isTablet ? 'h-[60vh]' : 
+                'h-[65vh]'
+              }`}
+            />
+            
+            {/* Controles customizados para mobile */}
+            {isMobile && (
+              <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-[1000]">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="h-10 w-10 p-0 rounded-full shadow-lg"
+                  onClick={centerOnRecife}
+                  title="Centralizar em Recife"
+                >
+                  <ZoomIn className="h-5 w-5" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="h-10 w-10 p-0 rounded-full shadow-lg"
+                  onClick={locateUser}
+                  title="Minha localização"
+                >
+                  <Locate className="h-5 w-5" />
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* 🔍 Barra de Pesquisa ABAIXO DO MAPA */}
           <div className="search-container relative">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -660,42 +653,6 @@ const Mapa = () => {
                     </button>
                   ))
                 )}
-              </div>
-            )}
-          </div>
-
-          {/* 🌍 Container do Mapa */}
-          <div className="relative w-full rounded-lg overflow-hidden shadow-lg border border-border">
-            <div 
-              ref={mapContainerRef} 
-              className={`w-full ${
-                isMobile ? 'h-[55vh]' : 
-                isTablet ? 'h-[60vh]' : 
-                'h-[65vh]'
-              }`}
-            />
-            
-            {/* Controles customizados para mobile */}
-            {isMobile && (
-              <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-[1000]">
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  className="h-10 w-10 p-0 rounded-full shadow-lg"
-                  onClick={centerOnRecife}
-                  title="Centralizar em Recife"
-                >
-                  <ZoomIn className="h-5 w-5" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  className="h-10 w-10 p-0 rounded-full shadow-lg"
-                  onClick={locateUser}
-                  title="Minha localização"
-                >
-                  <Locate className="h-5 w-5" />
-                </Button>
               </div>
             )}
           </div>
