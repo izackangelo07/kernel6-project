@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Camera, MapPin, X, Check, AlertCircle, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Camera, MapPin, X, Check, AlertCircle, Image as ImageIcon, Loader2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useCriarProblema } from "@/hooks/useProblemas";
+import { supabase } from "@/integrations/supabase/client";
 
 const Registrar = () => {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ const Registrar = () => {
   const [foto, setFoto] = useState<File | null>(null);
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
   const [localizacao, setLocalizacao] = useState<{ lat: number; lng: number; endereco?: string } | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const criarProblema = useCriarProblema();
   const [isLargeTablet, setIsLargeTablet] = useState(false);
   const [isMediumTablet, setIsMediumTablet] = useState(false);
@@ -190,12 +192,41 @@ const Registrar = () => {
     }
 
     try {
+      setIsUploading(true);
+      let imagem_url: string | null = null;
+
+      // Upload da imagem se existir
+      if (foto) {
+        const fileExt = foto.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('problemas-images')
+          .upload(filePath, foto);
+
+        if (uploadError) {
+          console.error("Erro ao fazer upload da imagem:", uploadError);
+          toast.error("Erro ao enviar a imagem. Tente novamente.");
+          setIsUploading(false);
+          return;
+        }
+
+        // Obter URL pública
+        const { data: { publicUrl } } = supabase.storage
+          .from('problemas-images')
+          .getPublicUrl(filePath);
+
+        imagem_url = publicUrl;
+      }
+
       await criarProblema.mutateAsync({
         titulo: titulo.trim(),
         descricao: descricao.trim(),
         categoria,
         latitude: localizacao!.lat,
         longitude: localizacao!.lng,
+        imagem_url,
       });
 
       localStorage.removeItem("registroDados");
@@ -211,6 +242,8 @@ const Registrar = () => {
     } catch (error) {
       console.error("Erro ao registrar problema:", error);
       toast.error("Erro ao registrar problema. Tente novamente.");
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -506,13 +539,13 @@ const Registrar = () => {
                 <Button
                   type="submit"
                   size={isMobile ? "sm" : "default"}
-                  disabled={criarProblema.isPending || !categoria || !titulo || !descricao || !localizacao}
+                  disabled={criarProblema.isPending || isUploading || !categoria || !titulo || !descricao || !localizacao}
                   className={`w-full ${getButtonHeight()} ${fontSize}`}
                 >
-                  {criarProblema.isPending ? (
+                  {(criarProblema.isPending || isUploading) ? (
                     <span className="flex items-center gap-2">
-                      <span className={`${fontSize === "text-sm" ? "h-3 w-3" : "h-4 w-4"} border-2 border-white border-t-transparent rounded-full animate-spin`}></span>
-                      Enviando...
+                      <Loader2 className={`${fontSize === "text-sm" ? "h-3 w-3" : "h-4 w-4"} animate-spin`} />
+                      {isUploading ? "Enviando foto..." : "Enviando..."}
                     </span>
                   ) : (
                     <>
