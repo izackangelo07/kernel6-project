@@ -185,26 +185,6 @@ const Mapa = () => {
     return () => debouncedSearch.cancel();
   }, [searchQuery, debouncedSearch]);
 
-  // Função para localizar usuário
-  const locateUser = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          if (mapRef.current) {
-            mapRef.current.setView([latitude, longitude], 16);
-            toast.success("Localização encontrada!");
-          }
-        },
-        (error) => {
-          console.error("Erro ao obter localização:", error);
-          toast.error("Não foi possível obter sua localização");
-        }
-      );
-    } else {
-      toast.error("Geolocalização não suportada pelo navegador");
-    }
-  };
 
   // Função para lidar com seleção de um resultado
   const handleSelectResult = async (result: SearchResult) => {
@@ -353,30 +333,6 @@ const Mapa = () => {
 
     map.on("click", handleMapClick);
 
-    // Adicionar botão de localização customizado
-    const LocateControl = L.Control.extend({
-      onAdd: function() {
-        const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
-        div.innerHTML = `
-          <a href="#" title="Minha Localização" style="display: flex; align-items: center; justify-content: center; width: ${isMobile ? '36px' : '44px'}; height: ${isMobile ? '36px' : '44px'}; background: white; border-radius: 4px; border: 2px solid rgba(0,0,0,0.2);">
-            <svg width="${isMobile ? '20' : '24'}" height="${isMobile ? '20' : '24'}" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2">
-              <path d="M12 22c-3.04 0-5.5-2.46-5.5-5.5S8.96 11 12 11s5.5 2.46 5.5 5.5S15.04 22 12 22z"/>
-              <path d="M12 8V3M8 12H3M12 16v5M16 12h5"/>
-            </svg>
-          </a>
-        `;
-        
-        L.DomEvent.on(div, 'click', function(e) {
-          L.DomEvent.stopPropagation(e);
-          L.DomEvent.preventDefault(e);
-          locateUser();
-        });
-        
-        return div;
-      }
-    });
-    const locateControl = new LocateControl({ position: 'topleft' });
-    locateControl.addTo(map);
 
     return () => {
       map.off("click", handleMapClick);

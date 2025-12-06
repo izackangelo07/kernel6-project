@@ -10,6 +10,7 @@ export interface Problema {
   latitude: number;
   longitude: number;
   status: string;
+  imagem_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -20,6 +21,7 @@ export interface NovoProblema {
   categoria: string;
   latitude: number;
   longitude: number;
+  imagem_url?: string | null;
 }
 
 export interface AtualizarProblema {
@@ -28,6 +30,7 @@ export interface AtualizarProblema {
   descricao?: string;
   categoria?: string;
   status?: string;
+  imagem_url?: string | null;
 }
 
 // Hook para buscar todos os problemas
