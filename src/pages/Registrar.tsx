@@ -306,279 +306,280 @@ const Registrar = () => {
   };
 
   return (
-  <div className="min-h-screen bg-background flex flex-col">
-    {/* Header - MAX-W-7XL */}
-    <header className="border-b border-border bg-card px-3 sm:px-6 md:px-8 py-3">
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
-        <Button
-          variant="ghost"
-          size={isMobile ? "sm" : "default"}
-          onClick={() => navigate("/ideias")}
-          className={`min-h-[40px] ${isMobile ? 'min-h-[36px]' : 'sm:min-h-[44px]'}`}
-        >
-          <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 sm:mr-2" />
-          <span className="hidden sm:inline">Voltar</span>
-        </Button>
-        
-        <h1 className={`font-semibold text-foreground text-center flex-1 truncate ${
-          fontSize === "text-sm" ? "text-lg" : "text-xl sm:text-2xl"
-        }`}>
-          Registrar Problema
-        </h1>
-        
-        {/* Espaçador para alinhamento */}
-        <div className="w-12" />
-      </div>
-    </header>
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Header - MAX-W-7XL */}
+      <header className="border-b border-border bg-card px-3 sm:px-6 md:px-8 py-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
+          <Button
+            variant="ghost"
+            size={isMobile ? "sm" : "default"}
+            onClick={() => navigate("/ideias")}
+            className={`min-h-[40px] ${isMobile ? 'min-h-[36px]' : 'sm:min-h-[44px]'}`}
+          >
+            <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 sm:mr-2" />
+            <span className="hidden sm:inline">Voltar</span>
+          </Button>
+          
+          <h1 className={`font-semibold text-foreground text-center flex-1 truncate ${
+            fontSize === "text-sm" ? "text-lg" : "text-xl sm:text-2xl"
+          }`}>
+            Registrar Problema
+          </h1>
+          
+          {/* Espaçador para alinhamento */}
+          <div className="w-12" />
+        </div>
+      </header>
 
-    {/* Main Content - Container principal mantendo consistência */}
-    <main className="flex-1 flex flex-col min-h-0">
-      {/* Container principal max-w-7xl movido para fora do form */}
-      <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col">
-        <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
-          {/* Conteúdo do formulário com padding responsivo */}
-          <div className="flex-1 flex flex-col min-h-0 px-3 sm:px-6 md:px-8 py-4">
-            
-            {/* Conteúdo do formulário com scroll interno */}
-            <div className={`flex-1 overflow-y-auto min-h-0 ${getSpacing()} pb-4`}>
-              {/* 1. Categoria */}
-              <Card className={`${getCardPadding()} border-border`}>
-                <div className={getSpacing()}>
-                  <div className="flex items-start justify-between">
-                    <Label htmlFor="categoria" className={`font-medium text-foreground ${fontSize}`}>
-                      1. Tipo de Problema *
-                    </Label>
-                    {categoria && (
-                      <Badge variant="outline" className="text-xs">
-                        ✓
-                      </Badge>
-                    )}
-                  </div>
-                  
-                  <Select value={categoria} onValueChange={setCategoria}>
-                    <SelectTrigger 
-                      id="categoria" 
-                      className={`${getInputHeight()} ${fontSize} ${categoria ? 'border-green-500' : ''}`}
-                    >
-                      <SelectValue placeholder="Selecione..." />
-                    </SelectTrigger>
-                    <SelectContent className="bg-card border-2 z-50 max-h-60">
-                      {categorias.map((cat) => (
-                        <SelectItem 
-                          key={cat} 
-                          value={cat}
-                          className={`${fontSize} py-2`}
-                        >
-                          {cat}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  
-                  {!categoria && (
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      <AlertCircle className="h-3 w-3" />
-                      Selecione uma categoria
-                    </p>
-                  )}
-                </div>
-              </Card>
-
-              {/* 2. Título */}
-              <Card className={`${getCardPadding()} border-border`}>
-                <div className={getSpacing()}>
-                  <div className="flex items-start justify-between">
-                    <Label htmlFor="titulo" className={`font-medium text-foreground ${fontSize}`}>
-                      2. Título do Problema *
-                    </Label>
-                    {titulo && (
-                      <Badge variant="outline" className="text-xs">
-                        {titulo.length}/100
-                      </Badge>
-                    )}
-                  </div>
-                  
-                  <Input
-                    id="titulo"
-                    value={titulo}
-                    onChange={(e) => setTitulo(e.target.value.slice(0, 100))}
-                    placeholder="Ex: Poste de luz quebrado na esquina"
-                    className={`${getInputHeight()} ${fontSize} ${titulo ? 'border-green-500' : ''}`}
-                    maxLength={100}
-                  />
-                  
-                  {titulo.length >= 80 && (
-                    <p className="text-xs text-yellow-600">
-                      {100 - titulo.length} caracteres restantes
-                    </p>
-                  )}
-                </div>
-              </Card>
-
-              {/* 3. Descrição */}
-              <Card className={`${getCardPadding()} border-border`}>
-                <div className={getSpacing()}>
-                  <div className="flex items-start justify-between">
-                    <Label htmlFor="descricao" className={`font-medium text-foreground ${fontSize}`}>
-                      3. Descrição Detalhada *
-                    </Label>
-                    {descricao && (
-                      <Badge variant="outline" className="text-xs">
-                        {descricao.length}/500
-                      </Badge>
-                    )}
-                  </div>
-                  
-                  <Textarea
-                    id="descricao"
-                    value={descricao}
-                    onChange={(e) => setDescricao(e.target.value.slice(0, 500))}
-                    placeholder="Descreva com detalhes o problema encontrado..."
-                    className={`${getTextareaHeight()} ${fontSize} resize-none ${descricao ? 'border-green-500' : ''}`}
-                    maxLength={500}
-                  />
-                  
-                  {descricao.length >= 400 && (
-                    <p className="text-xs text-yellow-600">
-                      {500 - descricao.length} caracteres restantes
-                    </p>
-                  )}
-                </div>
-              </Card>
-
-              {/* 4. Foto (Opcional) */}
-              <Card className={`${getCardPadding()} border-border`}>
-                <div className={getSpacing()}>
-                  <Label className={`font-medium text-foreground ${fontSize}`}>
-                    4. Foto (Opcional)
-                  </Label>
-                  
+      {/* Main Content - Container principal mantendo consistência */}
+      <main className="flex-1 flex flex-col min-h-0">
+        {/* Container principal max-w-7xl movido para fora do form */}
+        <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col">
+          <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
+            {/* Conteúdo do formulário com padding responsivo */}
+            <div className="flex-1 flex flex-col min-h-0 px-3 sm:px-6 md:px-8 py-4">
+              
+              {/* Conteúdo do formulário com scroll interno */}
+              <div className={`flex-1 overflow-y-auto min-h-0 ${getSpacing()} pb-4`}>
+                {/* 1. Categoria */}
+                <Card className={`${getCardPadding()} border-border`}>
                   <div className={getSpacing()}>
-                    {fotoPreview && (
-                      <div className="relative rounded-lg overflow-hidden border border-border">
-                        <img 
-                          src={fotoPreview} 
-                          alt="Preview" 
-                          className={`w-full ${getFotoPreviewHeight()} object-cover`}
-                        />
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="sm"
-                          onClick={handleRemoveFoto}
-                          className="absolute top-1 right-1 h-6 w-6 p-0 rounded-full"
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
+                    <div className="flex items-start justify-between">
+                      <Label htmlFor="categoria" className={`font-medium text-foreground ${fontSize}`}>
+                        1. Tipo de Problema *
+                      </Label>
+                      {categoria && (
+                        <Badge variant="outline" className="text-xs">
+                          ✓
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    <Select value={categoria} onValueChange={setCategoria}>
+                      <SelectTrigger 
+                        id="categoria" 
+                        className={`${getInputHeight()} ${fontSize} ${categoria ? 'border-green-500' : ''}`}
+                      >
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card border-2 z-50 max-h-60">
+                        {categorias.map((cat) => (
+                          <SelectItem 
+                            key={cat} 
+                            value={cat}
+                            className={`${fontSize} py-2`}
+                          >
+                            {cat}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    {!categoria && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        Selecione uma categoria
+                      </p>
                     )}
+                  </div>
+                </Card>
+
+                {/* 2. Título */}
+                <Card className={`${getCardPadding()} border-border`}>
+                  <div className={getSpacing()}>
+                    <div className="flex items-start justify-between">
+                      <Label htmlFor="titulo" className={`font-medium text-foreground ${fontSize}`}>
+                        2. Título do Problema *
+                      </Label>
+                      {titulo && (
+                        <Badge variant="outline" className="text-xs">
+                          {titulo.length}/100
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    <Input
+                      id="titulo"
+                      value={titulo}
+                      onChange={(e) => setTitulo(e.target.value.slice(0, 100))}
+                      placeholder="Ex: Poste de luz quebrado na esquina"
+                      className={`${getInputHeight()} ${fontSize} ${titulo ? 'border-green-500' : ''}`}
+                      maxLength={100}
+                    />
+                    
+                    {titulo.length >= 80 && (
+                      <p className="text-xs text-yellow-600">
+                        {100 - titulo.length} caracteres restantes
+                      </p>
+                    )}
+                  </div>
+                </Card>
+
+                {/* 3. Descrição */}
+                <Card className={`${getCardPadding()} border-border`}>
+                  <div className={getSpacing()}>
+                    <div className="flex items-start justify-between">
+                      <Label htmlFor="descricao" className={`font-medium text-foreground ${fontSize}`}>
+                        3. Descrição Detalhada *
+                      </Label>
+                      {descricao && (
+                        <Badge variant="outline" className="text-xs">
+                          {descricao.length}/500
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    <Textarea
+                      id="descricao"
+                      value={descricao}
+                      onChange={(e) => setDescricao(e.target.value.slice(0, 500))}
+                      placeholder="Descreva com detalhes o problema encontrado..."
+                      className={`${getTextareaHeight()} ${fontSize} resize-none ${descricao ? 'border-green-500' : ''}`}
+                      maxLength={500}
+                    />
+                    
+                    {descricao.length >= 400 && (
+                      <p className="text-xs text-yellow-600">
+                        {500 - descricao.length} caracteres restantes
+                      </p>
+                    )}
+                  </div>
+                </Card>
+
+                {/* 4. Foto (Opcional) */}
+                <Card className={`${getCardPadding()} border-border`}>
+                  <div className={getSpacing()}>
+                    <Label className={`font-medium text-foreground ${fontSize}`}>
+                      4. Foto (Opcional)
+                    </Label>
+                    
+                    <div className={getSpacing()}>
+                      {fotoPreview && (
+                        <div className="relative rounded-lg overflow-hidden border border-border">
+                          <img 
+                            src={fotoPreview} 
+                            alt="Preview" 
+                            className={`w-full ${getFotoPreviewHeight()} object-cover`}
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={handleRemoveFoto}
+                            className="absolute top-1 right-1 h-6 w-6 p-0 rounded-full"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
+                      
+                      <Button
+                        type="button"
+                        variant={fotoPreview ? "outline" : "default"}
+                        size="sm"
+                        onClick={handleFotoCapture}
+                        className={`w-full ${getButtonHeight()} ${fontSize}`}
+                      >
+                        {fotoPreview ? (
+                          <>
+                            <ImageIcon className={`mr-2 ${fontSize === "text-sm" ? "h-3 w-3" : "h-4 w-4"}`} />
+                            Alterar Foto
+                          </>
+                        ) : (
+                          <>
+                            <Camera className={`mr-2 ${fontSize === "text-sm" ? "h-3 w-3" : "h-4 w-4"}`} />
+                            {isMobile ? "Adicionar Foto" : "Adicionar Foto do Problema"}
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* 5. Localização */}
+                <Card className={`${getCardPadding()} border-border`}>
+                  <div className={getSpacing()}>
+                    <div className="flex items-start justify-between">
+                      <Label className={`font-medium text-foreground ${fontSize}`}>
+                        5. Localização *
+                      </Label>
+                      {localizacao && (
+                        <Badge className="bg-green-100 text-green-800 border-green-300 text-xs">
+                          ✓
+                        </Badge>
+                      )}
+                    </div>
                     
                     <Button
                       type="button"
-                      variant={fotoPreview ? "outline" : "default"}
+                      variant={localizacao ? "outline" : "default"}
                       size="sm"
-                      onClick={handleFotoCapture}
-                      className={`w-full ${getButtonHeight()} ${fontSize}`}
+                      onClick={handleGoToMap}
+                      className={`w-full ${getButtonHeight()} ${fontSize} ${
+                        localizacao 
+                          ? 'border-green-500 bg-green-50 hover:bg-green-100 text-green-700' 
+                          : ''
+                      }`}
                     >
-                      {fotoPreview ? (
-                        <>
-                          <ImageIcon className={`mr-2 ${fontSize === "text-sm" ? "h-3 w-3" : "h-4 w-4"}`} />
-                          Alterar Foto
-                        </>
-                      ) : (
-                        <>
-                          <Camera className={`mr-2 ${fontSize === "text-sm" ? "h-3 w-3" : "h-4 w-4"}`} />
-                          {isMobile ? "Adicionar Foto" : "Adicionar Foto do Problema"}
-                        </>
-                      )}
+                      <MapPin className={`mr-2 ${fontSize === "text-sm" ? "h-3 w-3" : "h-4 w-4"} ${
+                        localizacao ? 'text-green-600' : ''
+                      }`} />
+                      <span className="text-left flex-1 truncate">
+                        {localizacao 
+                          ? "✓ Local Marcado" 
+                          : "Marcar no Mapa"
+                        }
+                      </span>
                     </Button>
-                  </div>
-                </div>
-              </Card>
-
-              {/* 5. Localização */}
-              <Card className={`${getCardPadding()} border-border`}>
-                <div className={getSpacing()}>
-                  <div className="flex items-start justify-between">
-                    <Label className={`font-medium text-foreground ${fontSize}`}>
-                      5. Localização *
-                    </Label>
-                    {localizacao && (
-                      <Badge className="bg-green-100 text-green-800 border-green-300 text-xs">
-                        ✓
-                      </Badge>
-                    )}
-                  </div>
-                  
-                  <Button
-                    type="button"
-                    variant={localizacao ? "outline" : "default"}
-                    size="sm"
-                    onClick={handleGoToMap}
-                    className={`w-full ${getButtonHeight()} ${fontSize} ${
-                      localizacao 
-                        ? 'border-green-500 bg-green-50 hover:bg-green-100 text-green-700' 
-                        : ''
-                    }`}
-                  >
-                    <MapPin className={`mr-2 ${fontSize === "text-sm" ? "h-3 w-3" : "h-4 w-4"} ${
-                      localizacao ? 'text-green-600' : ''
-                    }`} />
-                    <span className="text-left flex-1 truncate">
-                      {localizacao 
-                        ? "✓ Local Marcado" 
-                        : "Marcar no Mapa"
-                      }
-                    </span>
-                  </Button>
-                  
-                  {localizacao?.endereco && (
-                    <div className="mt-2 p-2 bg-muted/30 rounded text-xs">
-                      <div className="flex items-start gap-1">
-                        <MapPin className="h-3 w-3 text-green-600 flex-shrink-0 mt-0.5" />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{localizacao.endereco}</p>
+                    
+                    {localizacao?.endereco && (
+                      <div className="mt-2 p-2 bg-muted/30 rounded text-xs">
+                        <div className="flex items-start gap-1">
+                          <MapPin className="h-3 w-3 text-green-600 flex-shrink-0 mt-0.5" />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">{localizacao.endereco}</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
-                  
-                  {!localizacao && (
-                    <p className="text-xs text-red-600 flex items-center gap-1">
-                      <AlertCircle className="h-3 w-3" />
-                      Marque a localização no mapa
-                    </p>
-                  )}
-                </div>
-              </Card>
+                    )}
+                    
+                    {!localizacao && (
+                      <p className="text-xs text-red-600 flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        Marque a localização no mapa
+                      </p>
+                    )}
+                  </div>
+                </Card>
 
-              {/* Botão de Envio */}
-              <div className="pt-2">
-                <Button
-                  type="submit"
-                  size={isMobile ? "sm" : "default"}
-                  disabled={criarProblema.isPending || isUploading || !categoria || !titulo || !descricao || !localizacao}
-                  className={`w-full ${getButtonHeight()} ${fontSize}`}
-                >
-                  {(criarProblema.isPending || isUploading) ? (
-                    <span className="flex items-center gap-2">
-                      <Loader2 className={`${fontSize === "text-sm" ? "h-3 w-3" : "h-4 w-4"} animate-spin`} />
-                      {isUploading ? "Enviando foto..." : "Enviando..."}
-                    </span>
-                  ) : (
-                    <>
-                      <Check className={`mr-2 ${fontSize === "text-sm" ? "h-3 w-3" : "h-4 w-4"}`} />
-                      {isMobile ? "Enviar" : "Enviar Registro"}
-                    </>
-                  )}
-                </Button>
+                {/* Botão de Envio */}
+                <div className="pt-2">
+                  <Button
+                    type="submit"
+                    size={isMobile ? "sm" : "default"}
+                    disabled={criarProblema.isPending || isUploading || !categoria || !titulo || !descricao || !localizacao}
+                    className={`w-full ${getButtonHeight()} ${fontSize}`}
+                  >
+                    {(criarProblema.isPending || isUploading) ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className={`${fontSize === "text-sm" ? "h-3 w-3" : "h-4 w-4"} animate-spin`} />
+                        {isUploading ? "Enviando foto..." : "Enviando..."}
+                      </span>
+                    ) : (
+                      <>
+                        <Check className={`mr-2 ${fontSize === "text-sm" ? "h-3 w-3" : "h-4 w-4"}`} />
+                        {isMobile ? "Enviar" : "Enviar Registro"}
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-        </form>
-      </div>
-    </main>
-  </div>
-);
+          </form>
+        </div>
+      </main>
+    </div>
+  );
+};
 
 export default Registrar;
