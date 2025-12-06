@@ -306,35 +306,37 @@ const Registrar = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Header - MAX-W-7XL */}
-      <header className="border-b border-border bg-card px-3 sm:px-6 md:px-8 py-3">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
-          <Button
-            variant="ghost"
-            size={isMobile ? "sm" : "default"}
-            onClick={() => navigate("/ideias")}
-            className={`min-h-[40px] ${isMobile ? 'min-h-[36px]' : 'sm:min-h-[44px]'}`}
-          >
-            <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 sm:mr-2" />
-            <span className="hidden sm:inline">Voltar</span>
-          </Button>
-          
-          <h1 className={`font-semibold text-foreground text-center flex-1 truncate ${
-            fontSize === "text-sm" ? "text-lg" : "text-xl sm:text-2xl"
-          }`}>
-            Registrar Problema
-          </h1>
-          
-          {/* Espaçador para alinhamento */}
-          <div className="w-12" />
-        </div>
-      </header>
+  <div className="min-h-screen bg-background flex flex-col">
+    {/* Header - MAX-W-7XL */}
+    <header className="border-b border-border bg-card px-3 sm:px-6 md:px-8 py-3">
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
+        <Button
+          variant="ghost"
+          size={isMobile ? "sm" : "default"}
+          onClick={() => navigate("/ideias")}
+          className={`min-h-[40px] ${isMobile ? 'min-h-[36px]' : 'sm:min-h-[44px]'}`}
+        >
+          <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 sm:mr-2" />
+          <span className="hidden sm:inline">Voltar</span>
+        </Button>
+        
+        <h1 className={`font-semibold text-foreground text-center flex-1 truncate ${
+          fontSize === "text-sm" ? "text-lg" : "text-xl sm:text-2xl"
+        }`}>
+          Registrar Problema
+        </h1>
+        
+        {/* Espaçador para alinhamento */}
+        <div className="w-12" />
+      </div>
+    </header>
 
-      {/* Main Content - Ocupa toda altura sem botão fixo */}
-      <main className="flex-1 flex flex-col min-h-0">
+    {/* Main Content - Container principal mantendo consistência */}
+    <main className="flex-1 flex flex-col min-h-0">
+      {/* Container principal max-w-7xl movido para fora do form */}
+      <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col">
         <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
-          {/* Container principal que preenche altura total */}
+          {/* Conteúdo do formulário com padding responsivo */}
           <div className="flex-1 flex flex-col min-h-0 px-3 sm:px-6 md:px-8 py-4">
             
             {/* Conteúdo do formulário com scroll interno */}
@@ -574,9 +576,9 @@ const Registrar = () => {
             </div>
           </div>
         </form>
-      </main>
-    </div>
-  );
-};
+      </div>
+    </main>
+  </div>
+);
 
 export default Registrar;
