@@ -130,8 +130,9 @@ const Registrar = () => {
     return "space-y-4"; // desktop
   };
 
-  // Efeito para carregar localização
+  // Efeito para carregar localização e dados salvos
   useEffect(() => {
+    // Carregar localização
     const loc = sessionStorage.getItem("localizacaoProblema");
     if (loc) {
       try {
@@ -142,17 +143,32 @@ const Registrar = () => {
         console.error("Erro ao parsear localização:", error);
       }
     }
+
+    // Carregar dados do formulário salvos
+    const dadosSalvos = sessionStorage.getItem("registroDados");
+    if (dadosSalvos) {
+      try {
+        const dados = JSON.parse(dadosSalvos);
+        if (dados.categoria) setCategoria(dados.categoria);
+        if (dados.titulo) setTitulo(dados.titulo);
+        if (dados.descricao) setDescricao(dados.descricao);
+        if (dados.fotoPreview) setFotoPreview(dados.fotoPreview);
+      } catch (error) {
+        console.error("Erro ao carregar dados salvos:", error);
+      }
+    }
   }, []);
 
-  // Salvar dados no localStorage
+  // Salvar dados no sessionStorage (incluindo foto)
   const salvarDados = () => {
     try {
       const dadosParaSalvar = {
         categoria,
         titulo,
         descricao,
+        fotoPreview,
       };
-      localStorage.setItem("registroDados", JSON.stringify(dadosParaSalvar));
+      sessionStorage.setItem("registroDados", JSON.stringify(dadosParaSalvar));
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
     }
@@ -164,7 +180,7 @@ const Registrar = () => {
       salvarDados();
     }, 500);
     return () => clearTimeout(timer);
-  }, [categoria, titulo, descricao]);
+  }, [categoria, titulo, descricao, fotoPreview]);
 
   const categorias = [
     "Iluminação pública",
@@ -229,7 +245,7 @@ const Registrar = () => {
         imagem_url,
       });
 
-      localStorage.removeItem("registroDados");
+      sessionStorage.removeItem("registroDados");
       setCategoria("");
       setTitulo("");
       setDescricao("");
