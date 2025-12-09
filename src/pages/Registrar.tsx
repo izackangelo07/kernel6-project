@@ -524,7 +524,7 @@ const Registrar = () => {
                       <MapPin className={`mr-2 ${fontSize === "text-sm" ? "h-3 w-3" : "h-4 w-4"} ${
                         localizacao ? 'text-green-600' : ''
                       }`} />
-                      <span className="text-left flex-1 truncate">
+                      <span className="text-center flex-1 truncate">
                         {localizacao 
                           ? "✓ Local Marcado" 
                           : "Marcar no Mapa"
