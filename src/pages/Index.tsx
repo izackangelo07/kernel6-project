@@ -93,7 +93,7 @@ const Index = () => {
                 className="w-full h-12 sm:h-14 md:h-16 text-sm sm:text-base md:text-lg"
                 onClick={() => navigate("/registrar")}
               >
-                Registrar Problema ou Ideia
+                Registrar Problema
               </Button>
 
               <Button 
@@ -102,7 +102,7 @@ const Index = () => {
                 className="w-full h-12 sm:h-14 md:h-16 text-sm sm:text-base md:text-lg"
                 onClick={() => navigate("/ideias")}
               >
-                Ver Ideias da Comunidade
+                Painel de Problemas
               </Button>
 
               <Button 
@@ -112,7 +112,7 @@ const Index = () => {
                 onClick={() => navigate("/painel-sonhos")}
               >
                 <span className="mr-2">🌟</span>
-                Painel dos Sonhos do Bairro
+                Painel de Ideias
               </Button>
             </div>
           </div>
