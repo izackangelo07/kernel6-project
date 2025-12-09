@@ -417,7 +417,7 @@ const Ideias = () => {
               {/* Descrição */}
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-muted-foreground">Descrição</Label>
-                <p className="text-sm sm:text-base text-foreground whitespace-pre-wrap break-words">
+                <p className="text-sm sm:text-base text-foreground whitespace-pre-wrap break-words max-w-[52ch]">
                   {selectedProblema.descricao}
                 </p>
               </div>
