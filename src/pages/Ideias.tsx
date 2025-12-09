@@ -191,7 +191,7 @@ const Ideias = () => {
   };
 
   const handleViewOnMap = (problema: Problema) => {
-    navigate(`/mapa-detalhe?lat=${problema.latitude}&lng=${problema.longitude}`);
+    navigate(`/mapa?lat=${problema.latitude}&lng=${problema.longitude}&id=${problema.id}`);
   };
 
   const clearFilters = () => {
