@@ -383,7 +383,7 @@ const Ideias = () => {
 
       {/* 👁️ Modal de Detalhes do Problema */}
       <Dialog open={detailModalOpen} onOpenChange={setDetailModalOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-screen max-w-none max-h-[90vh] overflow-y-auto m-0 rounded-none sm:rounded-lg">
           <DialogHeader>
             <DialogTitle className="text-lg sm:text-xl pr-8">
               {selectedProblema?.titulo}
