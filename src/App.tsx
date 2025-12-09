@@ -10,6 +10,7 @@ import Registrar from "./pages/Registrar";
 import Ideias from "./pages/Ideias";
 import ComoFunciona from "./pages/ComoFunciona";
 import Mapa from "./pages/Mapa";
+import MapaDetalhe from "./pages/MapaDetalhe";
 import Confirmacao from "./pages/Confirmacao";
 import PainelSonhos from "./pages/PainelSonhos";
 import Auth from "./pages/Auth";
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/ideias" element={<Ideias />} />
             <Route path="/como-funciona" element={<ComoFunciona />} />
             <Route path="/mapa" element={<Mapa />} />
+            <Route path="/mapa-detalhe" element={<MapaDetalhe />} />
             <Route path="/confirmacao" element={<Confirmacao />} />
             <Route path="/painel-sonhos" element={<PainelSonhos />} />
             <Route
