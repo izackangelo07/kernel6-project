@@ -4,61 +4,79 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { useProblemas } from "@/hooks/useProblemas";
+import { useResponsive } from "@/hooks/useResponsive";
+
+// Ícone customizado para cada categoria
+const createCustomIcon = (categoria: string, isSelected: boolean = false, isMobile: boolean = false) => {
+  const colorMap: Record<string, string> = {
+    "Iluminação pública": "#eab308",
+    "Limpeza urbana": "#22c55e",
+    "Buraco na rua": "#f97316",
+    "Áreas verdes / praças": "#10b981",
+    "Escola / creche": "#3b82f6",
+    "Segurança": "#ef4444",
+  };
+
+  const color = colorMap[categoria] || "#6b7280";
+  const size = isSelected ? (isMobile ? 36 : 44) : (isMobile ? 24 : 32);
+  const innerSize = isSelected ? (isMobile ? 12 : 16) : (isMobile ? 8 : 12);
+  const borderWidth = isSelected ? 4 : 2;
+  const shadow = isSelected ? "0 4px 12px rgba(0,0,0,0.4)" : "0 2px 4px rgba(0,0,0,0.2)";
+
+  return L.divIcon({
+    className: "custom-marker",
+    html: `<div style="
+      background-color: ${color}; 
+      width: ${size}px; 
+      height: ${size}px; 
+      border-radius: 50%; 
+      border: ${borderWidth}px solid white; 
+      box-shadow: ${shadow}; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center;
+      ${isSelected ? 'animation: pulse 1.5s infinite;' : ''}
+    ">
+      <div style="width: ${innerSize}px; height: ${innerSize}px; background: white; border-radius: 50%;"></div>
+    </div>
+    <style>
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+      }
+    </style>`,
+    iconSize: [size, size],
+    iconAnchor: [size/2, size/2],
+    popupAnchor: [0, -size/2],
+  });
+};
 
 const MapaDetalhe = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
-  const [isMapReady, setIsMapReady] = useState(false);
+  const { data: problemas = [], isLoading } = useProblemas();
+  const { isMobile } = useResponsive();
 
   const lat = parseFloat(searchParams.get("lat") || "0");
   const lng = parseFloat(searchParams.get("lng") || "0");
+  const focusId = searchParams.get("id");
 
+  // Inicializar mapa
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
-    // Inicializar mapa
     mapRef.current = L.map(mapContainerRef.current, {
       center: [lat, lng],
-      zoom: 17,
+      zoom: isMobile ? 16 : 17,
       zoomControl: true,
     });
 
-    // Adicionar tiles
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(mapRef.current);
-
-    // Criar ícone customizado
-    const customIcon = L.divIcon({
-      className: "custom-marker",
-      html: `
-        <div style="
-          width: 40px;
-          height: 40px;
-          background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.8) 100%);
-          border: 3px solid white;
-          border-radius: 50%;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        ">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
-            <circle cx="12" cy="10" r="3"/>
-          </svg>
-        </div>
-      `,
-      iconSize: [40, 40],
-      iconAnchor: [20, 40],
-    });
-
-    // Adicionar marcador
-    L.marker([lat, lng], { icon: customIcon }).addTo(mapRef.current);
-
-    setIsMapReady(true);
 
     return () => {
       if (mapRef.current) {
@@ -66,7 +84,42 @@ const MapaDetalhe = () => {
         mapRef.current = null;
       }
     };
-  }, [lat, lng]);
+  }, [lat, lng, isMobile]);
+
+  // Adicionar marcadores dos problemas
+  useEffect(() => {
+    if (!mapRef.current || isLoading || problemas.length === 0) return;
+
+    const map = mapRef.current;
+
+    problemas.forEach((problema) => {
+      const isSelected = focusId === problema.id;
+      
+      const marker = L.marker([problema.latitude, problema.longitude], {
+        icon: createCustomIcon(problema.categoria, isSelected, isMobile),
+        zIndexOffset: isSelected ? 1000 : 0,
+      }).addTo(map);
+
+      const popupContent = `
+        <div style="padding: 4px 2px; max-width: ${isMobile ? '180px' : '220px'};">
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+            <span style="font-weight: 600; font-size: ${isMobile ? '12px' : '13px'};">${problema.titulo}</span>
+          </div>
+          <span style="font-size: ${isMobile ? '10px' : '11px'}; color: #4b5563;">${problema.categoria}</span>
+          <div style="margin-top: 4px; font-size: ${isMobile ? '10px' : '11px'}; color: #6b7280;">
+            <span>Status: ${problema.status}</span>
+          </div>
+        </div>
+      `;
+
+      marker.bindPopup(popupContent);
+
+      // Abrir popup do problema selecionado
+      if (isSelected) {
+        setTimeout(() => marker.openPopup(), 300);
+      }
+    });
+  }, [problemas, isLoading, focusId, isMobile]);
 
   return (
     <div className="min-h-screen h-screen bg-background flex flex-col overflow-hidden">
