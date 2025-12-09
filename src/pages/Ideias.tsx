@@ -1,8 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Lightbulb, Trash2, Construction, Trees, School, Shield, HelpCircle, MapPin, Plus, Search, Pencil, X } from "lucide-react";
+import { ArrowLeft, Lightbulb, Trash2, Construction, Trees, School, Shield, HelpCircle, MapPin, Plus, Search, Pencil, X, Calendar, Tag, Image as ImageIcon } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -64,6 +64,25 @@ const categorias = [
 
 const statusOptions = ["pendente", "em_analise", "aprovado", "rejeitado"];
 
+// Função para obter endereço via Nominatim
+const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+      {
+        headers: {
+          "Accept-Language": "pt-BR",
+        },
+      }
+    );
+    const data = await response.json();
+    return data.display_name || "Endereço não encontrado";
+  } catch (error) {
+    console.error("Erro ao buscar endereço:", error);
+    return "Endereço não disponível";
+  }
+};
+
 const Ideias = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -91,6 +110,12 @@ const Ideias = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  // Detail modal state
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedProblema, setSelectedProblema] = useState<Problema | null>(null);
+  const [endereco, setEndereco] = useState<string>("");
+  const [loadingEndereco, setLoadingEndereco] = useState(false);
+
   const problemasFiltrados = useMemo(() => {
     return problemas.filter((problema) => {
       const matchBusca = problema.titulo.toLowerCase().includes(busca.toLowerCase()) ||
@@ -103,7 +128,24 @@ const Ideias = () => {
     });
   }, [busca, filtroCategoria, filtroStatus, problemas]);
 
-  const handleEdit = (problema: Problema) => {
+  // Buscar endereço quando abrir modal de detalhes
+  useEffect(() => {
+    if (selectedProblema && detailModalOpen) {
+      setLoadingEndereco(true);
+      setEndereco("");
+      reverseGeocode(selectedProblema.latitude, selectedProblema.longitude)
+        .then((addr) => setEndereco(addr))
+        .finally(() => setLoadingEndereco(false));
+    }
+  }, [selectedProblema, detailModalOpen]);
+
+  const handleCardClick = (problema: Problema) => {
+    setSelectedProblema(problema);
+    setDetailModalOpen(true);
+  };
+
+  const handleEdit = (problema: Problema, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     setEditingProblema(problema);
     setEditForm({
       titulo: problema.titulo,
@@ -129,7 +171,8 @@ const Ideias = () => {
     }
   };
 
-  const handleDeleteClick = (id: string) => {
+  const handleDeleteClick = (id: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     setDeletingId(id);
     setDeleteModalOpen(true);
   };
@@ -141,13 +184,14 @@ const Ideias = () => {
       await excluirProblema.mutateAsync(deletingId);
       setDeleteModalOpen(false);
       setDeletingId(null);
+      setDetailModalOpen(false);
     } catch (error) {
       // Error handled by mutation
     }
   };
 
   const handleViewOnMap = (problema: Problema) => {
-    navigate(`/mapa?lat=${problema.latitude}&lng=${problema.longitude}&id=${problema.id}`);
+    navigate(`/mapa-detalhe?lat=${problema.latitude}&lng=${problema.longitude}`);
   };
 
   const clearFilters = () => {
@@ -157,9 +201,9 @@ const Ideias = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen h-screen bg-background flex flex-col overflow-hidden">
       {/* Header */}
-      <header className="border-b border-border bg-card px-4 py-3 sm:px-6 sm:py-4 sticky top-0 z-10">
+      <header className="border-b border-border bg-card px-4 py-3 sm:px-6 sm:py-4 flex-shrink-0">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
           <Button
             variant="ghost"
@@ -180,20 +224,20 @@ const Ideias = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 px-3 sm:px-6 md:px-8 py-3 sm:py-4 md:py-6">
-        <div className="max-w-7xl mx-auto h-full flex flex-col gap-4 sm:gap-6">
-          {/* 🔍 Barra de Pesquisa e Filtros (IGUAL EM TODOS OS DISPOSITIVOS) */}
-          <Card className="p-4 sm:p-6 border-border">
-            <div className="space-y-4">
+      <main className="flex-1 px-3 sm:px-6 md:px-8 py-3 sm:py-4 md:py-6 overflow-hidden">
+        <div className="max-w-7xl mx-auto h-full flex flex-col gap-3 sm:gap-4">
+          {/* 🔍 Barra de Pesquisa e Filtros */}
+          <Card className="p-3 sm:p-4 md:p-6 border-border flex-shrink-0">
+            <div className="space-y-3 sm:space-y-4">
               {/* Search Bar */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Buscar problemas por título ou descrição..."
+                  placeholder="Buscar problemas..."
                   value={busca}
                   onChange={(e) => setBusca(e.target.value)}
-                  className="pl-10 pr-10 py-3 sm:py-4 text-sm sm:text-base"
+                  className="pl-10 pr-10 py-2 sm:py-3 text-sm sm:text-base h-10 sm:h-12"
                 />
                 {busca && (
                   <button
@@ -205,95 +249,71 @@ const Ideias = () => {
                 )}
               </div>
 
-              {/* Filter Dropdowns - Layout responsivo mas sempre visível */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Categoria</Label>
-                  <Select value={filtroCategoria} onValueChange={setFiltroCategoria}>
-                    <SelectTrigger className="text-sm sm:text-base">
-                      <SelectValue placeholder="Todas as categorias" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="todas">Todas as categorias</SelectItem>
-                      {categorias.map((cat) => (
-                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              {/* Filter Dropdowns */}
+              <div className="grid grid-cols-2 gap-2 sm:gap-4">
+                <Select value={filtroCategoria} onValueChange={setFiltroCategoria}>
+                  <SelectTrigger className="text-xs sm:text-sm h-9 sm:h-10">
+                    <SelectValue placeholder="Categoria" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todas">Todas</SelectItem>
+                    {categorias.map((cat) => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Status</Label>
-                  <Select value={filtroStatus} onValueChange={setFiltroStatus}>
-                    <SelectTrigger className="text-sm sm:text-base">
-                      <SelectValue placeholder="Todos os status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="todos">Todos os status</SelectItem>
-                      {statusOptions.map((status) => (
-                        <SelectItem key={status} value={status}>{getStatusLabel(status)}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Select value={filtroStatus} onValueChange={setFiltroStatus}>
+                  <SelectTrigger className="text-xs sm:text-sm h-9 sm:h-10">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    {statusOptions.map((status) => (
+                      <SelectItem key={status} value={status}>{getStatusLabel(status)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
-              {/* Active filters and clear button */}
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
-                <div className="flex flex-wrap gap-2">
-                  {filtroCategoria !== "todas" && (
-                    <Badge variant="secondary" className="text-xs">
-                      {filtroCategoria}
-                    </Badge>
-                  )}
-                  {filtroStatus !== "todos" && (
-                    <Badge variant="secondary" className="text-xs">
-                      {getStatusLabel(filtroStatus)}
-                    </Badge>
-                  )}
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearFilters}
-                  className="text-xs h-8"
-                >
-                  Limpar filtros
-                </Button>
+              {/* Active filters */}
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  <span className="font-semibold text-foreground">{problemasFiltrados.length}</span> de{" "}
+                  <span className="font-semibold text-foreground">{problemas.length}</span> problemas
+                </p>
+                {(filtroCategoria !== "todas" || filtroStatus !== "todos" || busca) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearFilters}
+                    className="text-xs h-7 px-2"
+                  >
+                    Limpar
+                  </Button>
+                )}
               </div>
             </div>
           </Card>
 
-          {/* 📊 Contador de Resultados */}
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              Mostrando <span className="font-semibold text-foreground">{problemasFiltrados.length}</span> de{" "}
-              <span className="font-semibold text-foreground">{problemas.length}</span> problemas
-            </p>
-          </div>
-
-          {/* 📋 Lista de Problemas */}
-          <div className="space-y-4 sm:space-y-6">
+          {/* 📋 Lista de Problemas com scroll */}
+          <div className="flex-1 overflow-y-auto min-h-0 space-y-3 sm:space-y-4 pb-2">
             {isLoading ? (
-              <Card className="p-8 sm:p-12 text-center">
-                <p className="text-base sm:text-lg md:text-xl text-muted-foreground">
+              <Card className="p-6 sm:p-8 text-center">
+                <p className="text-sm sm:text-base text-muted-foreground">
                   Carregando problemas...
                 </p>
               </Card>
             ) : problemasFiltrados.length === 0 ? (
-              <Card className="p-8 sm:p-12 text-center">
-                <div className="space-y-4">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full bg-muted flex items-center justify-center">
-                    <Search className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground" />
+              <Card className="p-6 sm:p-8 text-center">
+                <div className="space-y-3">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto rounded-full bg-muted flex items-center justify-center">
+                    <Search className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground" />
                   </div>
-                  <p className="text-base sm:text-lg md:text-xl text-muted-foreground">
+                  <p className="text-sm sm:text-base text-muted-foreground">
                     Nenhum problema encontrado
                   </p>
-                  <Button
-                    variant="outline"
-                    onClick={clearFilters}
-                    className="mt-2"
-                  >
+                  <Button variant="outline" size="sm" onClick={clearFilters}>
                     Limpar filtros
                   </Button>
                 </div>
@@ -305,75 +325,37 @@ const Ideias = () => {
                 return (
                   <Card 
                     key={problema.id} 
-                    className="p-4 sm:p-6 hover:shadow-md transition-shadow"
+                    className="p-3 sm:p-4 md:p-5 hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={() => handleCardClick(problema)}
                   >
-                    <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+                    <div className="flex items-start gap-3 sm:gap-4">
                       {/* Ícone da Categoria */}
-                      <div className="flex-shrink-0 self-start">
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary/10 flex items-center justify-center">
-                          <IconeCategoria className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
+                      <div className="flex-shrink-0">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                          <IconeCategoria className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                         </div>
                       </div>
 
                       {/* Conteúdo */}
-                      <div className="flex-1 space-y-3 min-w-0">
-                        <div className="space-y-2">
-                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-                            <h3 className="text-lg sm:text-xl font-semibold text-foreground break-words pr-2">
-                              {problema.titulo}
-                            </h3>
-                            <Badge className={`text-xs sm:text-sm py-1 px-3 ${getStatusColor(problema.status)}`}>
-                              {getStatusLabel(problema.status)}
-                            </Badge>
-                          </div>
-                          <p className="text-sm sm:text-base text-muted-foreground break-words line-clamp-2">
-                            {problema.descricao}
-                          </p>
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-2">
+                          <h3 className="text-sm sm:text-base md:text-lg font-semibold text-foreground truncate pr-2">
+                            {problema.titulo}
+                          </h3>
+                          <Badge className={`text-xs py-0.5 px-2 self-start ${getStatusColor(problema.status)}`}>
+                            {getStatusLabel(problema.status)}
+                          </Badge>
                         </div>
-
+                        <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
+                          {problema.descricao}
+                        </p>
                         <div className="flex flex-wrap items-center gap-2">
-                          <Badge variant="outline" className="text-xs sm:text-sm">
+                          <Badge variant="outline" className="text-xs">
                             {problema.categoria}
                           </Badge>
                           <span className="text-xs text-muted-foreground">
-                            • {new Date(problema.created_at).toLocaleDateString('pt-BR')}
+                            {new Date(problema.created_at).toLocaleDateString('pt-BR')}
                           </span>
-                        </div>
-
-                        {/* Botões de Ação */}
-                        <div className="flex flex-wrap gap-2 pt-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleViewOnMap(problema)}
-                            className="flex-1 sm:flex-none min-w-[120px]"
-                          >
-                            <MapPin className="mr-2 h-4 w-4" />
-                            Ver no mapa
-                          </Button>
-                          
-                          {isAdmin && (
-                            <>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleEdit(problema)}
-                                className="flex-1 sm:flex-none min-w-[120px] text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                              >
-                                <Pencil className="mr-2 h-4 w-4" />
-                                Editar
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleDeleteClick(problema.id)}
-                                className="flex-1 sm:flex-none min-w-[120px] text-red-600 hover:text-red-700 hover:bg-red-50"
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Excluir
-                              </Button>
-                            </>
-                          )}
                         </div>
                       </div>
                     </div>
@@ -386,12 +368,12 @@ const Ideias = () => {
       </main>
 
       {/* Footer - Botão Fixo */}
-      <footer className="sticky bottom-0 left-0 right-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-3 sm:py-4">
+      <footer className="border-t border-border bg-card/95 backdrop-blur-sm px-4 py-3 flex-shrink-0">
         <div className="max-w-7xl mx-auto">
           <Button
             size="lg"
             onClick={() => navigate("/registrar")}
-            className="w-full min-h-[48px] sm:min-h-[56px]"
+            className="w-full h-11 sm:h-12 md:h-14"
           >
             <Plus className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
             <span className="text-sm sm:text-base">Registrar Novo Problema</span>
@@ -399,9 +381,117 @@ const Ideias = () => {
         </div>
       </footer>
 
+      {/* 👁️ Modal de Detalhes do Problema */}
+      <Dialog open={detailModalOpen} onOpenChange={setDetailModalOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-lg sm:text-xl pr-8">
+              {selectedProblema?.titulo}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedProblema && (
+            <div className="space-y-4 py-2">
+              {/* Status e Categoria */}
+              <div className="flex flex-wrap gap-2">
+                <Badge className={`${getStatusColor(selectedProblema.status)}`}>
+                  {getStatusLabel(selectedProblema.status)}
+                </Badge>
+                <Badge variant="outline">
+                  <Tag className="h-3 w-3 mr-1" />
+                  {selectedProblema.categoria}
+                </Badge>
+              </div>
+
+              {/* Foto */}
+              {selectedProblema.imagem_url && (
+                <div className="rounded-lg overflow-hidden border border-border">
+                  <img 
+                    src={selectedProblema.imagem_url} 
+                    alt="Foto do problema" 
+                    className="w-full h-48 sm:h-56 object-cover"
+                  />
+                </div>
+              )}
+
+              {/* Descrição */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-muted-foreground">Descrição</Label>
+                <p className="text-sm sm:text-base text-foreground whitespace-pre-wrap break-words">
+                  {selectedProblema.descricao}
+                </p>
+              </div>
+
+              {/* Data */}
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Calendar className="h-4 w-4" />
+                <span>Registrado em {new Date(selectedProblema.created_at).toLocaleDateString('pt-BR', {
+                  day: '2-digit',
+                  month: 'long',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}</span>
+              </div>
+
+              {/* Endereço */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  Localização
+                </Label>
+                {loadingEndereco ? (
+                  <p className="text-sm text-muted-foreground animate-pulse">Buscando endereço...</p>
+                ) : (
+                  <p className="text-sm text-foreground">{endereco}</p>
+                )}
+              </div>
+
+              {/* Botões de Ação */}
+              <div className="flex flex-col gap-2 pt-2">
+                <Button
+                  variant="default"
+                  onClick={() => handleViewOnMap(selectedProblema)}
+                  className="w-full"
+                >
+                  <MapPin className="mr-2 h-4 w-4" />
+                  Ver no Mapa
+                </Button>
+                
+                {isAdmin && (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setDetailModalOpen(false);
+                        handleEdit(selectedProblema);
+                      }}
+                      className="flex-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                    >
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Editar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        handleDeleteClick(selectedProblema.id);
+                      }}
+                      className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Excluir
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* ✏️ Modal de Edição */}
       <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editar Problema</DialogTitle>
             <DialogDescription>
@@ -424,10 +514,14 @@ const Ideias = () => {
               <Textarea
                 id="edit-descricao"
                 value={editForm.descricao}
-                onChange={(e) => setEditForm({ ...editForm, descricao: e.target.value })}
-                rows={3}
+                onChange={(e) => setEditForm({ ...editForm, descricao: e.target.value.slice(0, 1000) })}
+                rows={4}
                 placeholder="Descreva o problema com detalhes"
+                maxLength={1000}
               />
+              <p className="text-xs text-muted-foreground text-right">
+                {editForm.descricao.length}/1000
+              </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
