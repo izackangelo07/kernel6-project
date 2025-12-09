@@ -52,6 +52,35 @@ const getStatusLabel = (status: string) => {
   return labelMap[status] || status;
 };
 
+// Função para formatar o endereço (mostrar apenas rua, bairro e cidade)
+const formatAddress = (fullAddress: string) => {
+  if (!fullAddress || fullAddress === "Endereço não encontrado" || fullAddress === "Endereço não disponível") {
+    return "Endereço não disponível";
+  }
+  
+  try {
+    // Divide o endereço por vírgulas
+    const parts = fullAddress.split(',');
+    
+    // Pega os primeiros 3 elementos (normalmente: rua, bairro, cidade)
+    if (parts.length >= 3) {
+      // Pega rua, bairro e cidade (ignora estado, CEP, país, etc.)
+      const [street, neighborhood, city] = parts.slice(0, 3);
+      return `${street.trim()}, ${neighborhood.trim()}, ${city.trim()}`;
+    } else if (parts.length === 2) {
+      // Se tiver apenas 2 partes (pode ser rua, bairro+cidade)
+      const [street, city] = parts;
+      return `${street.trim()}, ${city.trim()}`;
+    } else {
+      // Se tiver apenas 1 parte, retorna ela mesma
+      return fullAddress;
+    }
+  } catch (error) {
+    console.error("Erro ao formatar endereço:", error);
+    return "Endereço não disponível";
+  }
+};
+
 const categorias = [
   "Iluminação pública",
   "Limpeza urbana",
@@ -385,21 +414,21 @@ const Ideias = () => {
       <Dialog open={detailModalOpen} onOpenChange={setDetailModalOpen}>
         <DialogContent className="w-screen max-w-none max-h-[90vh] overflow-y-auto m-0 rounded-lg">
           <DialogHeader>
-            <DialogTitle className="text-lg sm:text-xl pr-8">
+            <DialogTitle className="text-lg sm:text-xl pr-8 break-words">
               {selectedProblema?.titulo}
             </DialogTitle>
           </DialogHeader>
           
           {selectedProblema && (
-            <div className="space-y-4 py-2">
+            <div className="space-y-4 py-2 px-4 sm:px-6">
               {/* Status e Categoria */}
               <div className="flex flex-wrap gap-2">
                 <Badge className={`${getStatusColor(selectedProblema.status)}`}>
                   {getStatusLabel(selectedProblema.status)}
                 </Badge>
-                <Badge variant="outline">
-                  <Tag className="h-3 w-3 mr-1" />
-                  {selectedProblema.categoria}
+                <Badge variant="outline" className="truncate max-w-full">
+                  <Tag className="h-3 w-3 mr-1 flex-shrink-0" />
+                  <span className="truncate">{selectedProblema.categoria}</span>
                 </Badge>
               </div>
 
@@ -417,69 +446,73 @@ const Ideias = () => {
               {/* Descrição */}
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-muted-foreground">Descrição</Label>
-                <p className="text-sm sm:text-base text-foreground whitespace-pre-wrap break-words max-w-[52ch]">
+                <p className="text-sm sm:text-base text-foreground whitespace-pre-wrap break-all md:break-words overflow-wrap-anywhere">
                   {selectedProblema.descricao}
                 </p>
               </div>
 
               {/* Data */}
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Calendar className="h-4 w-4" />
-                <span>Registrado em {new Date(selectedProblema.created_at).toLocaleDateString('pt-BR', {
-                  day: '2-digit',
-                  month: 'long',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}</span>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+                <Calendar className="h-4 w-4 flex-shrink-0" />
+                <span className="break-words">
+                  Registrado em {new Date(selectedProblema.created_at).toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </span>
               </div>
 
               {/* Endereço */}
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  Localização
+                  <MapPin className="h-4 w-4 flex-shrink-0" />
+                  <span className="break-words">Localização</span>
                 </Label>
                 {loadingEndereco ? (
-                  <p className="text-sm text-muted-foreground animate-pulse">Buscando endereço...</p>
+                  <p className="text-sm text-muted-foreground animate-pulse break-words">Buscando endereço...</p>
                 ) : (
-                  <p className="text-sm text-foreground">{endereco}</p>
+                  <p className="text-sm text-foreground break-all md:break-words overflow-wrap-anywhere">
+                    {formatAddress(endereco)}
+                  </p>
                 )}
               </div>
 
               {/* Botões de Ação */}
-              <div className="flex flex-col gap-2 pt-2">
+              <div className="flex flex-col gap-2 pt-2 pb-4">
                 <Button
                   variant="default"
                   onClick={() => handleViewOnMap(selectedProblema)}
-                  className="w-full"
+                  className="w-full truncate"
                 >
-                  <MapPin className="mr-2 h-4 w-4" />
-                  Ver no Mapa
+                  <MapPin className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">Ver no Mapa</span>
                 </Button>
                 
                 {isAdmin && (
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-col sm:flex-row">
                     <Button
                       variant="outline"
                       onClick={() => {
                         setDetailModalOpen(false);
                         handleEdit(selectedProblema);
                       }}
-                      className="flex-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                      className="flex-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 truncate"
                     >
-                      <Pencil className="mr-2 h-4 w-4" />
-                      Editar
+                      <Pencil className="mr-2 h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">Editar</span>
                     </Button>
                     <Button
                       variant="outline"
                       onClick={() => {
                         handleDeleteClick(selectedProblema.id);
                       }}
-                      className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50 truncate"
                     >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Excluir
+                      <Trash2 className="mr-2 h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">Excluir</span>
                     </Button>
                   </div>
                 )}
