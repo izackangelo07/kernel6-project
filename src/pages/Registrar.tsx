@@ -519,12 +519,12 @@ const Registrar = () => {
                         localizacao 
                           ? 'border-green-500 bg-green-50 hover:bg-green-100 text-green-700' 
                           : ''
-                      }`}
+                      } flex items-center justify-center`}
                     >
                       <MapPin className={`mr-2 ${fontSize === "text-sm" ? "h-3 w-3" : "h-4 w-4"} ${
                         localizacao ? 'text-green-600' : ''
                       }`} />
-                      <span className="text-center flex-1 truncate">
+                      <span className="text-center">
                         {localizacao 
                           ? "✓ Local Marcado" 
                           : "Marcar no Mapa"
