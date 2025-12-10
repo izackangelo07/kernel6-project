@@ -160,6 +160,7 @@ const Mapa = () => {
   const focusLat = searchParams.get('lat');
   const focusLng = searchParams.get('lng');
   const focusId = searchParams.get('id');
+  const mode = searchParams.get('mode'); // 'edit' para modo de edição
 
   // Função debounced para busca
   const debouncedSearch = useCallback(
@@ -399,11 +400,21 @@ const Mapa = () => {
 
   const handleConfirm = () => {
     if (selectedLocation) {
-      sessionStorage.setItem("localizacaoProblema", JSON.stringify({
-        ...selectedLocation,
-        endereco: address
-      }));
-      navigate("/registrar");
+      // Verificar se estamos no modo de edição
+      if (mode === 'edit') {
+        sessionStorage.setItem("editProblemaLocation", JSON.stringify({
+          lat: selectedLocation.lat,
+          lng: selectedLocation.lng,
+          endereco: address
+        }));
+        navigate("/ideias");
+      } else {
+        sessionStorage.setItem("localizacaoProblema", JSON.stringify({
+          ...selectedLocation,
+          endereco: address
+        }));
+        navigate("/registrar");
+      }
     } else {
       toast.error("Por favor, marque um local no mapa");
     }

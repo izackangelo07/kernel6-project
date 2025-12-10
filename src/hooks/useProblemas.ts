@@ -31,6 +31,8 @@ export interface AtualizarProblema {
   categoria?: string;
   status?: string;
   imagem_url?: string | null;
+  latitude?: number;
+  longitude?: number;
 }
 
 // Hook para buscar todos os problemas

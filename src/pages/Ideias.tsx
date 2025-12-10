@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Lightbulb, Trash2, Construction, Trees, School, Shield, HelpCircle, MapPin, Plus, Search, Pencil, X, Calendar, Tag, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Lightbulb, Trash2, Construction, Trees, School, Shield, HelpCircle, MapPin, Plus, Search, Pencil, X, Calendar, Tag, Image as ImageIcon, Camera, Loader2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useProblemas, useAtualizarProblema, useExcluirProblema, Problema } from "@/hooks/useProblemas";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const getCategoriaIcon = (categoria: string) => {
   const iconMap: Record<string, any> = {
@@ -133,7 +134,15 @@ const Ideias = () => {
     descricao: "",
     categoria: "",
     status: "",
+    latitude: 0,
+    longitude: 0,
+    imagem_url: null as string | null,
   });
+  const [editFoto, setEditFoto] = useState<File | null>(null);
+  const [editFotoPreview, setEditFotoPreview] = useState<string | null>(null);
+  const [editEndereco, setEditEndereco] = useState("");
+  const [loadingEditEndereco, setLoadingEditEndereco] = useState(false);
+  const [isUploadingEdit, setIsUploadingEdit] = useState(false);
 
   // Delete confirmation state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -181,22 +190,152 @@ const Ideias = () => {
       descricao: problema.descricao,
       categoria: problema.categoria,
       status: problema.status,
+      latitude: problema.latitude,
+      longitude: problema.longitude,
+      imagem_url: problema.imagem_url,
     });
+    setEditFoto(null);
+    setEditFotoPreview(problema.imagem_url);
+    setLoadingEditEndereco(true);
+    reverseGeocode(problema.latitude, problema.longitude)
+      .then((addr) => setEditEndereco(addr))
+      .finally(() => setLoadingEditEndereco(false));
     setEditModalOpen(true);
   };
+
+  const handleEditFotoCapture = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        if (file.size > 5 * 1024 * 1024) {
+          toast.error("A imagem deve ser menor que 5MB");
+          return;
+        }
+        
+        setEditFoto(file);
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setEditFotoPreview(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+        
+        toast.success("Foto selecionada!");
+      }
+    };
+    input.click();
+  };
+
+  const handleRemoveEditFoto = () => {
+    setEditFoto(null);
+    setEditFotoPreview(null);
+    setEditForm({ ...editForm, imagem_url: null });
+    toast.info("Foto removida");
+  };
+
+  const handleEditLocation = () => {
+    // Salvar dados do formulário de edição no sessionStorage
+    sessionStorage.setItem("editProblemaData", JSON.stringify({
+      ...editForm,
+      id: editingProblema?.id,
+      fotoPreview: editFotoPreview,
+    }));
+    sessionStorage.setItem("editReturnTo", "/ideias");
+    navigate("/mapa?mode=edit");
+  };
+
+  // Carregar localização retornada do mapa (modo edição)
+  useEffect(() => {
+    const editLocation = sessionStorage.getItem("editProblemaLocation");
+    const editData = sessionStorage.getItem("editProblemaData");
+    
+    if (editLocation && editData) {
+      try {
+        const location = JSON.parse(editLocation);
+        const data = JSON.parse(editData);
+        
+        setEditForm({
+          titulo: data.titulo || "",
+          descricao: data.descricao || "",
+          categoria: data.categoria || "",
+          status: data.status || "",
+          latitude: location.lat,
+          longitude: location.lng,
+          imagem_url: data.imagem_url,
+        });
+        setEditFotoPreview(data.fotoPreview);
+        setEditEndereco(location.endereco || "");
+        
+        // Buscar o problema original para continuar editando
+        const problema = problemas.find(p => p.id === data.id);
+        if (problema) {
+          setEditingProblema(problema);
+          setEditModalOpen(true);
+        }
+        
+        sessionStorage.removeItem("editProblemaLocation");
+        sessionStorage.removeItem("editProblemaData");
+        sessionStorage.removeItem("editReturnTo");
+      } catch (error) {
+        console.error("Erro ao carregar dados de edição:", error);
+      }
+    }
+  }, [problemas]);
 
   const handleSaveEdit = async () => {
     if (!editingProblema) return;
     
     try {
+      setIsUploadingEdit(true);
+      let imagem_url = editForm.imagem_url;
+
+      // Upload da nova imagem se existir
+      if (editFoto) {
+        const fileExt = editFoto.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('problemas-images')
+          .upload(filePath, editFoto);
+
+        if (uploadError) {
+          console.error("Erro ao fazer upload da imagem:", uploadError);
+          toast.error("Erro ao enviar a imagem. Tente novamente.");
+          setIsUploadingEdit(false);
+          return;
+        }
+
+        // Obter URL pública
+        const { data: { publicUrl } } = supabase.storage
+          .from('problemas-images')
+          .getPublicUrl(filePath);
+
+        imagem_url = publicUrl;
+      }
+
       await atualizarProblema.mutateAsync({
         id: editingProblema.id,
-        ...editForm,
+        titulo: editForm.titulo,
+        descricao: editForm.descricao,
+        categoria: editForm.categoria,
+        status: editForm.status,
+        latitude: editForm.latitude,
+        longitude: editForm.longitude,
+        imagem_url,
       });
       setEditModalOpen(false);
       setEditingProblema(null);
+      setEditFoto(null);
+      setEditFotoPreview(null);
     } catch (error) {
       // Error handled by mutation
+    } finally {
+      setIsUploadingEdit(false);
     }
   };
 
@@ -556,6 +695,69 @@ const Ideias = () => {
                 {editForm.descricao.length}/1000
               </p>
             </div>
+            
+            {/* Foto */}
+            <div className="space-y-2">
+              <Label>Foto</Label>
+              {editFotoPreview ? (
+                <div className="relative rounded-lg overflow-hidden border border-border">
+                  <img 
+                    src={editFotoPreview} 
+                    alt="Preview" 
+                    className="w-full h-32 object-cover"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleRemoveEditFoto}
+                    className="absolute top-1 right-1 h-6 w-6 p-0 rounded-full"
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-24 border-2 border-dashed border-border rounded-lg bg-muted/50">
+                  <p className="text-sm text-muted-foreground">Sem foto</p>
+                </div>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleEditFotoCapture}
+                className="w-full"
+              >
+                <Camera className="mr-2 h-4 w-4" />
+                {editFotoPreview ? "Trocar Foto" : "Adicionar Foto"}
+              </Button>
+            </div>
+
+            {/* Localização */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                Localização
+              </Label>
+              {loadingEditEndereco ? (
+                <p className="text-sm text-muted-foreground animate-pulse">Buscando endereço...</p>
+              ) : (
+                <p className="text-sm text-foreground break-words">
+                  {formatAddress(editEndereco) || "Endereço não disponível"}
+                </p>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleEditLocation}
+                className="w-full"
+              >
+                <MapPin className="mr-2 h-4 w-4" />
+                Alterar Localização no Mapa
+              </Button>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Categoria</Label>
@@ -586,11 +788,18 @@ const Ideias = () => {
             </div>
           </div>
           <DialogFooter className="flex flex-col sm:flex-row gap-2">
-            <Button variant="outline" onClick={() => setEditModalOpen(false)} className="flex-1">
+            <Button variant="outline" onClick={() => setEditModalOpen(false)} className="flex-1" disabled={isUploadingEdit}>
               Cancelar
             </Button>
-            <Button onClick={handleSaveEdit} disabled={atualizarProblema.isPending} className="flex-1">
-              {atualizarProblema.isPending ? "Salvando..." : "Salvar Alterações"}
+            <Button onClick={handleSaveEdit} disabled={atualizarProblema.isPending || isUploadingEdit} className="flex-1">
+              {isUploadingEdit || atualizarProblema.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                "Salvar Alterações"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
