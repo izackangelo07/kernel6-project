@@ -130,6 +130,19 @@ const Registrar = () => {
     return "space-y-4"; // desktop
   };
 
+  // Função para converter base64 para File
+  const base64ToFile = async (base64: string, filename: string): Promise<File | null> => {
+    try {
+      const res = await fetch(base64);
+      const blob = await res.blob();
+      const extension = base64.split(';')[0].split('/')[1] || 'jpg';
+      return new File([blob], `${filename}.${extension}`, { type: blob.type });
+    } catch (error) {
+      console.error("Erro ao converter base64 para File:", error);
+      return null;
+    }
+  };
+
   // Efeito para carregar localização e dados salvos
   useEffect(() => {
     // Carregar localização
@@ -152,7 +165,15 @@ const Registrar = () => {
         if (dados.categoria) setCategoria(dados.categoria);
         if (dados.titulo) setTitulo(dados.titulo);
         if (dados.descricao) setDescricao(dados.descricao);
-        if (dados.fotoPreview) setFotoPreview(dados.fotoPreview);
+        if (dados.fotoPreview) {
+          setFotoPreview(dados.fotoPreview);
+          // Converter o preview base64 de volta para File
+          base64ToFile(dados.fotoPreview, `foto-${Date.now()}`).then((file) => {
+            if (file) {
+              setFoto(file);
+            }
+          });
+        }
       } catch (error) {
         console.error("Erro ao carregar dados salvos:", error);
       }
