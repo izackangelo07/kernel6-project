@@ -265,7 +265,7 @@ const PainelSonhos = () => {
 
       {/* Modal de Visualização */}
       <Dialog open={!!ideiaAberta} onOpenChange={() => setIdeiaAberta(null)}>
-        <DialogContent className="max-w-full sm:max-w-2xl md:max-w-3xl max-h-[90vh] overflow-y-auto mx-0 md:mx-4">
+        <DialogContent className="max-w-full sm:max-w-2xl md:max-w-3xl max-h-[90vh] overflow-y-auto mx-0 md:mx-2 lg:mx-4">
           {ideiaAberta && (
             <>
               <DialogHeader>
