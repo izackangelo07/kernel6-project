@@ -551,7 +551,7 @@ const Ideias = () => {
 
       {/* 👁️ Modal de Detalhes do Problema */}
       <Dialog open={detailModalOpen} onOpenChange={setDetailModalOpen}>
-        <DialogContent className="w-screen max-w-none max-h-[90vh] overflow-y-auto m-0 rounded-lg">
+        <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl md:w-auto">
           <DialogHeader>
             <DialogTitle className="text-lg sm:text-xl pr-8 break-words">
               {selectedProblema?.titulo}
@@ -663,7 +663,7 @@ const Ideias = () => {
 
       {/* ✏️ Modal de Edição */}
       <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl md:w-auto">
           <DialogHeader>
             <DialogTitle>Editar Problema</DialogTitle>
             <DialogDescription>
@@ -807,7 +807,7 @@ const Ideias = () => {
 
       {/* 🗑️ Modal de Confirmação de Exclusão */}
       <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="w-[95vw] max-w-md rounded-2xl md:w-auto">
           <DialogHeader>
             <DialogTitle>Confirmar Exclusão</DialogTitle>
             <DialogDescription>
